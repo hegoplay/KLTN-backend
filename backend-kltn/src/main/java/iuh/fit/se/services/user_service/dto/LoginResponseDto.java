@@ -1,0 +1,21 @@
+package iuh.fit.se.services.user_service.dto;
+
+import java.util.List;
+
+import iuh.fit.se.entity.enumerator.UserRole;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
+@Builder
+@AllArgsConstructor
+public class LoginResponseDto {
+	String accessToken;
+	String userId;
+	String username;
+	String email;
+	UserRole role;
+}

@@ -1,0 +1,30 @@
+spring:
+  profiles:
+    active: dev
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    shutdown:
+      access: unrestricted
+    health:
+      probes:
+        enabled: true
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true
+jwt:
+  secret: k8wT5KF1ZrFojvpXJbhXOcYVv44lCKvOwQudCRY6HjxxTGH3WQbQDHEFZjhS+mCE
+
+  header: Authorization
+  prefix: Bearer
+  expirationMs: 86400000 # 1 ngày tính bằng milliseconds
+  
+common:
+  app:
+    name: My Application
+    version: 1.0.0

@@ -1,0 +1,68 @@
+services:
+  redis:
+    image: "redis:8.2.1"
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./db-volume/redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - kltn-network
+    
+  mysql:
+    image: "mysql:9.4.0"
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: kltn
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      
+    volumes:
+      - ./db-volume/mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=root"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    networks:
+      - kltn-network
+
+  backend:
+    build: ./backend-kltn
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_healthy
+        restart: true
+    environment:
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_MYSQL_DATASOURCE_URL: jdbc:mysql://mysql:3306/kltn?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          '[ -f /tmp/HealthCheck.java ] || echo "public class HealthCheck { public static void main(String[] args) throws java.lang.Throwable { System.exit(java.net.HttpURLConnection.HTTP_OK == ((java.net.HttpURLConnection)new java.net.URL(args[0]).openConnection()).getResponseCode() ? 0 : 1); } }" > /tmp/HealthCheck.java && java /tmp/HealthCheck.java http://localhost:8080/actuator/health',
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    networks:
+      - kltn-network
+
+networks:
+  kltn-network:
+    driver: bridge
