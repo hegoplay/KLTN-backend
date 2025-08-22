@@ -2,6 +2,7 @@ package iuh.fit.se.services.post_service.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,7 +32,7 @@ public class PostLeaderController {
 	PostService postService;
 	iuh.fit.se.services.post_service.mapper.PostMapping postMapper;
 
-	@PutMapping("/{postId}/approve")
+	@PatchMapping("/{postId}/approve")
 	@Operation(summary = "chấp nhận bài viết và cho lên hệ thống", description = """
 			Phê duyệt bài viết, chỉ có leader mới có quyền phê duyệt bài viết.
 		""")
@@ -49,7 +50,7 @@ public class PostLeaderController {
 		return ResponseEntity.status(HttpStatus.ACCEPTED).body(postWrapperDto);
 	}
 
-	@PutMapping("/{postId}/reject")
+	@PatchMapping("/{postId}/reject")
 	@Operation(summary = "chấp nhận bài viết và cho lên hệ thống", description = """
 			Không phê duyệt bài viết, chỉ có leader mới có quyền từ chối bài viết. 
 			Bài viết vẫn được hiện thị trong danh sách hiện tại nhưng không được công khai.
