@@ -17,11 +17,6 @@ spring:
     redis:
       host: ${SPRING_REDIS_HOST:localhost}
       port: ${SPRING_REDIS_PORT:6379}
-logging:
-  level:
-    org.springframework.jdbc: DEBUG
-    org.hibernate: DEBUG
-    com.zaxxer.hikari: DEBUG
 jwt:
   secret: k8wT5KF1ZrFojvpXJbhXOcYVv44lCKvOwQudCRY6HjxxTGH3WQbQDHEFZjhS+mCE
 
