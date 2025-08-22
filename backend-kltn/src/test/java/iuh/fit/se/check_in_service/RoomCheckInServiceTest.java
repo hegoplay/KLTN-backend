@@ -31,7 +31,7 @@ public class RoomCheckInServiceTest {
 	@RepeatedTest(4)
 	public void testToggle() {
 		User user = userService.getUserByUsernameOrEmail("admin");
-		String userId = user.getUserId();
+		String userId = user.getId();
 		boolean initStatus = checkInService.isCheckedIn(userId);
 		log.info("Initial check-in: {}", initStatus);
 		boolean isCheckedIn = checkInService.toggleCheckIn(userId);

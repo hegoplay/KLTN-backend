@@ -47,7 +47,7 @@ public class Post {
 
 	@CreatedDate
 	@Builder.Default
-	LocalDateTime postDate = LocalDateTime.now();
+	LocalDateTime postTime = LocalDateTime.now();
 
 	@ManyToOne
 	@JoinColumn(name = "image_id")
@@ -61,5 +61,5 @@ public class Post {
 	
     @LastModifiedDate
     @OrderColumn
-    LocalDateTime lastModifiedDate; // Sẽ tự động cập nhật khi entity thay đổi
+    LocalDateTime lastModifiedTime; // Sẽ tự động cập nhật khi entity thay đổi
 }

@@ -7,7 +7,7 @@ import org.mapstruct.factory.Mappers;
 
 import iuh.fit.se.entity.User;
 import iuh.fit.se.services.user_service.dto.RegisterRequestDto;
-import iuh.fit.se.services.user_service.dto.ShortUserInfoResponseDto;
+import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
 import iuh.fit.se.services.user_service.dto.UserInfoResponseDto;
 
 @Mapper(componentModel = "spring")
@@ -17,12 +17,12 @@ public abstract class UserMapper {
 	public abstract User toUserEntity(RegisterRequestDto requestDto);
 	public abstract UserInfoResponseDto toUserInfoResponseDto(User user);
 	
-	public abstract ShortUserInfoResponseDto toShortUserInfoResponseDto(User user);
+	public abstract UserShortInfoResponseDto toShortUserInfoResponseDto(User user);
 	
 	@AfterMapping
-    protected void afterToShortUserInfoResponseDto(User user, @MappingTarget ShortUserInfoResponseDto dto)
+    protected void afterToShortUserInfoResponseDto(User user, @MappingTarget UserShortInfoResponseDto.UserShortInfoResponseDtoBuilder dto)
     {
-		String userUrl = "/api/users/" + user.getUserId();
-		dto.setUserUrl(userUrl);
+		String userUrl = "/api/users/" + user.getId();
+		dto.userUrl(userUrl);
     }
 }

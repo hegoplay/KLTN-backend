@@ -15,7 +15,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @AllArgsConstructor
 public class UserInfoResponseDto {
-	String userId;
+	String id;
 	String username;
 	String email;
 	String nickname;

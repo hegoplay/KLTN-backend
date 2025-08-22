@@ -15,7 +15,7 @@ import iuh.fit.se.entity.RoomCheckIn;
 public interface RoomCheckInRepository extends JpaRepository<RoomCheckIn, String> {
 	
 //	find latest check-in by user ID
-	Optional<RoomCheckIn> findFirstByUserUserIdAndStartTimeAfterOrderByStartTimeDesc(String userId,LocalDateTime startTime);
+	Optional<RoomCheckIn> findFirstByUser_IdAndStartTimeAfterOrderByStartTimeDesc(String userId,LocalDateTime startTime);
 	
-	Page<RoomCheckIn> findByUserUserId(String userId, Pageable pageable);
+	Page<RoomCheckIn> findByUser_Id(String userId, Pageable pageable);
 }

@@ -51,7 +51,7 @@ class UserControllerTest {
     @Test
     void testLogin() throws Exception {
         User mockUser = User.builder()
-			.userId("testuser")
+			.id("testuser")
 			.username("testuser")
 			.password(passwordEncoder.encode("password"))
 			.fullName("Test User")

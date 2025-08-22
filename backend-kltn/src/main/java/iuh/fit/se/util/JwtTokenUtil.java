@@ -45,7 +45,7 @@ public class JwtTokenUtil {
 					.map(authority -> authority.getAuthority())
 					.findFirst()
 					.orElse("NONE")); // Mặc định là USER nếu không có quyền nào
-		claims.put("userId", userDetails.getUserId()); // Giả sử username là
+		claims.put("userId", userDetails.getId()); // Giả sử username là
 														// userId
 		claims.put("fullName", userDetails.getFullName());
 

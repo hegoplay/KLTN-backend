@@ -9,7 +9,7 @@ import iuh.fit.se.entity.Post;
 import iuh.fit.se.services.post_service.dto.PostCreateRequestDto;
 import iuh.fit.se.services.post_service.dto.PostDetailDto;
 import iuh.fit.se.services.post_service.dto.PostWrapperDto;
-import iuh.fit.se.services.user_service.dto.ShortUserInfoResponseDto;
+import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
 import iuh.fit.se.services.user_service.mapper.UserMapper;
 import iuh.fit.se.services.user_service.repository.AttachmentRepository;
 
@@ -36,13 +36,13 @@ public abstract class PostMapping {
 	@AfterMapping
 	protected void afterToPostWrapperDto(
 		Post post,
-		@MappingTarget PostWrapperDto dto
+		@MappingTarget PostWrapperDto.PostWrapperDtoBuilder dto
 	) {
 		if (post != null && dto != null && post.getWriter() != null) {
 			// Sử dụng UserMapper để map writer
-			ShortUserInfoResponseDto writerDto = userMapper
+			UserShortInfoResponseDto writerDto = userMapper
 				.toShortUserInfoResponseDto(post.getWriter());
-			dto.setWriter(writerDto);
+			dto.writer(writerDto);
 		}
 
 	}
@@ -50,16 +50,16 @@ public abstract class PostMapping {
 	@AfterMapping
 	protected void afterToPost(
 		PostCreateRequestDto dto,
-		@MappingTarget Post post
+		@MappingTarget Post.PostBuilder post
 	) {
 		if (dto != null && post != null) {
 			if (dto.featureImageName() != null) {
 				post
-					.setFeatureImage(attachmentRepository
+					.featureImage(attachmentRepository
 						.findById(dto.featureImageName())
 						.orElse(null));
 			} else {
-				post.setFeatureImage(null);
+				post.featureImage(null);
 			}
 		}
 	}

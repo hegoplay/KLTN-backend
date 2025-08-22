@@ -19,7 +19,6 @@ spring:
       port: ${SPRING_REDIS_PORT:6379}
 jwt:
   secret: k8wT5KF1ZrFojvpXJbhXOcYVv44lCKvOwQudCRY6HjxxTGH3WQbQDHEFZjhS+mCE
-
   header: Authorization
   prefix: Bearer
   expirationMs: 86400000 # 1 ngày tính bằng milliseconds

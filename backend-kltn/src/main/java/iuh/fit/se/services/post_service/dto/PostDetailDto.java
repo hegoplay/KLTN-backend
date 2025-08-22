@@ -5,7 +5,7 @@ import java.util.List;
 
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.user_service.dto.AttachmentDto;
-import iuh.fit.se.services.user_service.dto.ShortUserInfoResponseDto;
+import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
 import lombok.experimental.FieldDefaults;
 
 @lombok.Data
@@ -14,14 +14,14 @@ import lombok.experimental.FieldDefaults;
 @lombok.Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class PostDetailDto {
-	String postId;
+	String id;
 	String title;
-	ShortUserInfoResponseDto writer;
-	LocalDateTime postDate;
+	UserShortInfoResponseDto writer;
+	LocalDateTime postTime;
 	String content;
 	AttachmentDto featureImage;
 	FunctionStatus status;
 	List<CommentResponseDto> comments;
-	LocalDateTime lastModifiedDate;
+	LocalDateTime lastModifiedTime;
 	
 }

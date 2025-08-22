@@ -2,7 +2,7 @@ package iuh.fit.se.services.post_service.dto;
 
 import java.time.LocalDateTime;
 
-import iuh.fit.se.services.user_service.dto.ShortUserInfoResponseDto;
+import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
 import lombok.experimental.FieldDefaults;
 
 @lombok.Data
@@ -11,8 +11,8 @@ import lombok.experimental.FieldDefaults;
 @lombok.Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class CommentResponseDto {
-	String commentId;
+	String id;
 	String content;
-	ShortUserInfoResponseDto commenter;
-	LocalDateTime commentDate;
+	UserShortInfoResponseDto commenter;
+	LocalDateTime commentTime;
 }

@@ -2,8 +2,6 @@ package iuh.fit.se.entity;
 
 import java.time.LocalDateTime;
 
-import org.springframework.core.annotation.Order;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -29,7 +27,7 @@ import lombok.experimental.FieldDefaults;
 public class RoomCheckIn {
 	@Id
 	@GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
-	String checkInId;
+	String id;
 
 	@ManyToOne
 	@JoinColumn(name = "user_id")

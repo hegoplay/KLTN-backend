@@ -10,5 +10,5 @@ import iuh.fit.se.entity.Attachment;
 @Repository
 public interface AttachmentRepository extends JpaRepository<Attachment, String> {
 	
-	List<Attachment> findByUserUserId(String userId);
+	List<Attachment> findByUser_Id(String userId);
 }

@@ -43,7 +43,7 @@ public class LocalAttachmentServiceImpl implements AttachmentService {
 	@Override
 	public List<Attachment> getAttachmentsByUserId(String userId) {
 		userService.getUserById(userId);
-		return attachmentRepository.findByUserUserId(userId);
+		return attachmentRepository.findByUser_Id(userId);
 	}
 	
 }

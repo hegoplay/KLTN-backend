@@ -37,7 +37,7 @@ public class User implements java.io.Serializable, UserDetails {
 
 	@Id
 	@GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
-	String userId;
+	String id;
 
 	@Column(unique = true, nullable = false)
 	@Length(min = 4, max = 32)

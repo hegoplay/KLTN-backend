@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,7 +21,15 @@ import lombok.experimental.FieldDefaults;
 
 @Data
 @Entity
-@Table(name = "event_organizers")
+@Table(
+    name = "event_organizers",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_event_organizer_user_event",
+            columnNames = {"user_id", "event_id"}
+        )
+    }
+)
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @lombok.Builder
 @NoArgsConstructor
@@ -32,7 +41,11 @@ public class EventOrganizer {
 	
 	@ManyToOne
 	@JoinColumn(name = "user_id")
-	User user;
+	User organizer;
+	
+	@ManyToOne
+	@JoinColumn(name = "event_id")
+	Event event;
 	String roleContent;
 	
 	@ElementCollection

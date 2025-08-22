@@ -13,8 +13,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @Builder
 @AllArgsConstructor
-public class ShortUserInfoResponseDto {
-	String userId;
+public class UserShortInfoResponseDto {
+	String id;
 	String username;
 	String email;
 	String nickname;

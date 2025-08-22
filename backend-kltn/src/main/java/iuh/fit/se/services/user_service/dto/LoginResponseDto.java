@@ -14,7 +14,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 public class LoginResponseDto {
 	String accessToken;
-	String userId;
+	String id;
 	String username;
 	String email;
 	UserRole role;

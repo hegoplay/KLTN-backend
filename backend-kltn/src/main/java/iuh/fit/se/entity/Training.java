@@ -24,10 +24,9 @@ public class Training {
 	@jakarta.persistence.Id
 	@JoinColumn(name = "training_id")
 	@GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
-	String trainingId;
+	String id;
 	
-	@OneToMany
-	@JoinColumn(name = "training_id")
+	@OneToMany(mappedBy = "training")
 	List<TrainingEvent> trainingEvents;
 	String description;
 	Location location;

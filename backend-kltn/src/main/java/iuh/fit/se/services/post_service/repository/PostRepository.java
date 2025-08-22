@@ -11,7 +11,7 @@ import iuh.fit.se.entity.enumerator.FunctionStatus;
 
 public interface PostRepository extends JpaRepository<Post, String> {
 
-	Page<Post> findAllByStatusAndTitleContainingIgnoreCaseAndPostDateBetween(
+	Page<Post> findAllByStatusAndTitleContainingIgnoreCaseAndPostTimeBetween(
 		FunctionStatus status,
 		String title,
 		LocalDateTime startDate,
@@ -20,14 +20,14 @@ public interface PostRepository extends JpaRepository<Post, String> {
 	);
 	
 //	hàm này dùng để tìm kiếm bài viết theo userId, status và title
-	Page<Post> findAllByWriter_UserIdAndStatusAndTitleContainingIgnoreCase(
+	Page<Post> findAllByWriter_IdAndStatusAndTitleContainingIgnoreCase(
 		String userId,
 		FunctionStatus status,
 		String title,
 		Pageable pageable
 	);
 	
-	Page<Post> findAllByWriter_UserIdAndTitleContainingIgnoreCase(
+	Page<Post> findAllByWriter_IdAndTitleContainingIgnoreCase(
 		String userId,
 		String title,
 		Pageable pageable

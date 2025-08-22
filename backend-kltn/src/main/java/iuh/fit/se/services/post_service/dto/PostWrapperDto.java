@@ -3,7 +3,7 @@ package iuh.fit.se.services.post_service.dto;
 import java.time.LocalDateTime;
 
 import iuh.fit.se.services.user_service.dto.AttachmentDto;
-import iuh.fit.se.services.user_service.dto.ShortUserInfoResponseDto;
+import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
 import lombok.experimental.FieldDefaults;
 
 @lombok.Data
@@ -12,12 +12,12 @@ import lombok.experimental.FieldDefaults;
 @lombok.Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class PostWrapperDto {
-	String postId;
+	String id;
 	String title;
-	ShortUserInfoResponseDto writer;
-	LocalDateTime postDate;
+	UserShortInfoResponseDto writer;
+	LocalDateTime postTime;
 	String content;
 	AttachmentDto featureImage;
-	LocalDateTime lastModifiedDate;
+	LocalDateTime lastModifiedTime;
 	
 }

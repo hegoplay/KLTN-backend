@@ -1,6 +1,5 @@
 package iuh.fit.se.user_service.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -30,7 +29,7 @@ class UserServiceTest {
         // Arrange
         User mockUser = User
         	.builder()
-        	.userId("abc")
+        	.id("abc")
         	.username("testuser")
         	.build();
         when(userRepository.findById("abc")).thenReturn(Optional.of(mockUser));

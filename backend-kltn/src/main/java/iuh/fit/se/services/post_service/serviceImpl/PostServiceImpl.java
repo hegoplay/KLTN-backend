@@ -45,10 +45,10 @@ public class PostServiceImpl implements PostService {
 	) {
 		// TODO Auto-generated method stub
 		return postRepository
-			.findAllByStatusAndTitleContainingIgnoreCaseAndPostDateBetween(
+			.findAllByStatusAndTitleContainingIgnoreCaseAndPostTimeBetween(
 				FunctionStatus.ACCEPTED, searchPostRequest.getSearchKeyword(),
-				TimeConstant.toLocalDate(searchPostRequest.getFromDate()),
-				TimeConstant.toLocalDate(searchPostRequest.getToDate()),
+				TimeConstant.toLocalDateTime(searchPostRequest.getFromDate()),
+				TimeConstant.toLocalDateTime(searchPostRequest.getToDate()),
 				pageable);
 	}
 
@@ -71,7 +71,7 @@ public class PostServiceImpl implements PostService {
 		Post post = postMapper.toPost(postDto);
 		User user = userService.getCurrentUser();
 		post.setWriter(user);
-		post.setPostDate(LocalDateTime.now());
+		post.setPostTime(LocalDateTime.now());
 
 		Post postResponse = postRepository.save(post);
 		log.info("PostDto info :{}", postDto.toString());
@@ -155,17 +155,17 @@ public class PostServiceImpl implements PostService {
 		Pageable pageable
 	) {
 		User user = userService.getCurrentUser();
-		if (!(user.isLeader() || user.getUserId().equals(userId))) {
+		if (!(user.isLeader() || user.getId().equals(userId))) {
 			throw new RuntimeException(
 				"User is not authorized to view posts of this user");
 		}
 		if (status == null) {
 			return postRepository
-				.findAllByWriter_UserIdAndTitleContainingIgnoreCase(userId,
+				.findAllByWriter_IdAndTitleContainingIgnoreCase(userId,
 					title, pageable);
 		} else {
 			return postRepository
-				.findAllByWriter_UserIdAndStatusAndTitleContainingIgnoreCase(
+				.findAllByWriter_IdAndStatusAndTitleContainingIgnoreCase(
 					userId, status, title, pageable);
 		}
 	}

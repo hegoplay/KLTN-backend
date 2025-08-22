@@ -21,7 +21,7 @@ public class TimeConstant {
 		return LocalDateTime.of(date, OPENING_TIME.minusMinutes(1));
 	}
 	
-	public static LocalDateTime toLocalDate(LocalDate date) {
+	public static LocalDateTime toLocalDateTime(LocalDate date) {
 		return LocalDateTime.of(date,LocalTime.MAX);
 	}
 }

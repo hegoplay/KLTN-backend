@@ -110,7 +110,7 @@ public class RoomCheckInImpl implements RoomCheckInService {
 		Pageable pageable
 	) {
 		return roomRepo
-			.findByUserUserId(userId, pageable)
+			.findByUser_Id(userId, pageable)
 			.map(roomCheckInMapper::toCheckInResponseDto);
 	}
 
@@ -118,7 +118,7 @@ public class RoomCheckInImpl implements RoomCheckInService {
 		String userId
 	) {
 		return roomRepo
-			.findFirstByUserUserIdAndStartTimeAfterOrderByStartTimeDesc(userId,
+			.findFirstByUser_IdAndStartTimeAfterOrderByStartTimeDesc(userId,
 				TimeConstant.fromLocalDate(LocalDate.now()));
 	}
 	
