@@ -20,10 +20,16 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Contest extends Event {
-	
-	@OneToMany(mappedBy = "contest")
-	List<ExamResult> examResults;
-	
+
+	@OneToMany(
+		mappedBy = "contest",
+		cascade = jakarta.persistence.CascadeType.ALL,
+		orphanRemoval = true,
+		fetch = jakarta.persistence.FetchType.LAZY
+	)
+	@Builder.Default	
+	List<ExamResult> examResults = new java.util.ArrayList<>();
+
 	@Builder.Default
 	boolean ableToRegister = true;
 }

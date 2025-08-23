@@ -74,7 +74,7 @@ public class User implements java.io.Serializable, UserDetails {
 	@Builder.Default
 	Integer attendancePoint = 0;
 	@Builder.Default
-	Integer contributePoint = 0;
+	Integer contributionPoint = 0;
 
 	// @Builder.Default
 	// @OneToMany(mappedBy = "user")
@@ -87,17 +87,23 @@ public class User implements java.io.Serializable, UserDetails {
 	@Builder.Default
 	boolean disabled = false;
 
-	@Builder.Default
-	LocalDateTime lastResetContributePoint = LocalDateTime.now();
-	@Builder.Default
-	LocalDateTime lastResetAttendancePoint = LocalDateTime.now();
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-		// return roles.stream()
-		// .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
-		// .toList();
-		return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+
+		List<SimpleGrantedAuthority> auths = new java.util.ArrayList<>();
+		int val = 0;
+		if (role != null) {
+			val = role.getValue();
+		}
+
+		for (UserRole r : UserRole.values()) {
+			if (r.getValue() <= val) {
+				auths.add(new SimpleGrantedAuthority("ROLE_" + r.name()));
+			}
+		}
+
+		return auths;
 	}
 
 	@Override
@@ -123,15 +129,30 @@ public class User implements java.io.Serializable, UserDetails {
 		// TODO Auto-generated method stub
 		return !disabled;
 	}
-	
+
 	public boolean isMember() {
-		return role == UserRole.MEMBER || role == UserRole.LEADER || role == UserRole.ADMIN;
+		return role == UserRole.MEMBER || role == UserRole.LEADER
+			|| role == UserRole.ADMIN;
 	}
 	public boolean isLeader() {
 		return role == UserRole.LEADER || role == UserRole.ADMIN;
 	}
 	public boolean isAdmin() {
 		return role == UserRole.ADMIN;
+	}
+	
+	public void plusAttendancePoint(int score) {
+		if (score + attendancePoint.intValue() < 0) {
+			throw new IllegalArgumentException("điểm tích cực có vấn đề ở user " + this.getUsername());
+		}
+		this.attendancePoint += score;
+	}
+	
+	public void plusContributionPoint(int score) {
+		if (score + contributionPoint.intValue() < 0) {
+			throw new IllegalArgumentException("điểm đóng góp có vấn đề ở user " + this.getUsername());
+		}
+		this.contributionPoint += score;
 	}
 
 }

@@ -5,5 +5,13 @@ public enum FunctionStatus {
 	ARCHIVED,
 	ACCEPTED,
 	REJECTED,
-	DISABLED,
+	DISABLED;
+	
+	public static boolean ableToCreate(FunctionStatus status) {
+		return status == PENDING || status == ARCHIVED;
+	}
+	
+	public static boolean ableToUpdate(FunctionStatus status) {
+		return status == PENDING || status == ARCHIVED || status == DISABLED;
+	}
 }

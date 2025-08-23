@@ -22,7 +22,7 @@ public class EventDetailResponseDto {
 	LocationDto location;
 	String title;
 	String content;
-	List<AttendeeDto> attendees;
+//	List<AttendeeDto> attendees;
 	List<EventOrganizerDto> organizers;
 	Integer multiple;
 	FunctionStatus status;

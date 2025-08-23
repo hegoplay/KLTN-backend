@@ -3,8 +3,8 @@ package iuh.fit.se.services.event_service.patterns;
 import iuh.fit.se.entity.Event;
 import iuh.fit.se.entity.User;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
-import iuh.fit.se.services.event_service.dto.EventCreateRequestDto;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
+import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
 import iuh.fit.se.services.user_service.service.UserService;
 
 public abstract class GenerateEventFactory {

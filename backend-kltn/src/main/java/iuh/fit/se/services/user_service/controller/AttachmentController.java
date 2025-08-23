@@ -61,6 +61,11 @@ public class AttachmentController {
 		)
 	})
 	public ResponseEntity<AttachmentDto> uploadAttachment(
+		@MediaFile(maxSize = 20 * 1024 * 1024)
+		@Parameter(
+	        description = "Tệp media cần tải lên (hình ảnh, video, audio)",
+	        required = true
+	    )
 		MultipartFile file,
 		HttpServletRequest request
 	) {
@@ -77,12 +82,6 @@ public class AttachmentController {
 		description = "Lấy danh sách tất cả các tệp đính kèm đã tải lên bởi người dùng hiện tại."
 	)
 	public ResponseEntity<ListAttachmentDtoResponse> getCurrentUserAttachment(
-		@Parameter(
-	        description = "Tệp media cần tải lên (hình ảnh, video, audio)",
-	        required = true
-	    )
-
-		@MediaFile(maxSize = 20 * 1024 * 1024)
 		HttpServletRequest request
 	) {
 		String userId = jwtTokenUtil

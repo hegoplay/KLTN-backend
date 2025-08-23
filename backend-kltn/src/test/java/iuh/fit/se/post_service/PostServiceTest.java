@@ -11,7 +11,7 @@ import iuh.fit.se.entity.Post;
 import iuh.fit.se.entity.User;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.entity.enumerator.UserRole;
-import iuh.fit.se.services.post_service.dto.PostCreateRequestDto;
+import iuh.fit.se.services.post_service.dto.PostRequestDto;
 import iuh.fit.se.services.post_service.service.PostService;
 import iuh.fit.se.services.user_service.service.UserService;
 
@@ -38,7 +38,7 @@ public class PostServiceTest {
 				.email("test@gmail.com")
 				.build());
 
-		PostCreateRequestDto dto = new PostCreateRequestDto("Test Post",
+		PostRequestDto dto = new PostRequestDto("Test Post",
 			"This is a test post content.",
 			"converted_IUH-Logo_24x24.png_1755609775397",
 			FunctionStatus.ACCEPTED);

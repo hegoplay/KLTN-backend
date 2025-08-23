@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import iuh.fit.se.entity.EventOrganizer;
 import iuh.fit.se.errorHandler.InputNotFoundException;
-import iuh.fit.se.services.event_service.dto.EventRequestOrganizerDto;
+import iuh.fit.se.services.event_service.dto.request.EventRequestOrganizerDto;
 import iuh.fit.se.services.user_service.repository.UserRepository;
 
 @Mapper(componentModel = "spring")

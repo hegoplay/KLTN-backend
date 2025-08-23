@@ -1,5 +1,7 @@
 package iuh.fit.se.entity;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import iuh.fit.se.entity.enumerator.FunctionStatus;
@@ -9,6 +11,7 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
@@ -27,43 +30,90 @@ import lombok.experimental.SuperBuilder;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @Entity
 @Table(name = "events")
-@DiscriminatorColumn(name = "event_type", discriminatorType = jakarta.persistence.DiscriminatorType.STRING)
+@DiscriminatorColumn(
+	name = "event_type",
+	discriminatorType = jakarta.persistence.DiscriminatorType.STRING
+)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-public abstract class Event{
-	
+public abstract class Event {
+
 	@Id
 	@GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
 	@jakarta.persistence.Column(name = "event_id")
 	String id;
-	
+
 	@jakarta.persistence.ManyToOne
 	@jakarta.persistence.JoinColumn(name = "host_id")
 	User host;
-	
+
 	@Embedded
 	Location location;
 	String title;
 	String content;
-	
-	@OneToMany(mappedBy = "event")
+
+	@OneToMany(
+		mappedBy = "event",
+		cascade = jakarta.persistence.CascadeType.ALL,
+		orphanRemoval = true,
+		fetch = FetchType.LAZY
+	)
 	@Builder.Default
 	@ToString.Exclude
-	List<Attendee> attendees = List.of();
-	
-	@OneToMany(mappedBy = "event")
+	List<Attendee> attendees = new ArrayList<>();
+
+	@OneToMany(
+		mappedBy = "event",
+		cascade = jakarta.persistence.CascadeType.ALL,
+		orphanRemoval = true,
+		fetch = FetchType.LAZY
+	)
 	@Builder.Default
 	@ToString.Exclude
-	List<EventOrganizer> organizers = List.of();
+	List<EventOrganizer> organizers = new ArrayList<>();
 	Integer multiple;
-	
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status")
 	@Builder.Default
 	FunctionStatus status = FunctionStatus.ARCHIVED;
-	
-	boolean isDone = false;
 
+	boolean isDone = false;
+	
+	LocalDateTime doneTime;
+	
+	public void addAttendee(Attendee attendee) {
+		if (this.attendees == null) {
+			this.attendees = new ArrayList<>();
+		}
+		attendee.setEvent(this);
+		this.attendees.add(attendee);
+    }
+	
+	public void removeAttendee(Attendee attendee) {
+		if (this.attendees != null) {
+			this.attendees.remove(attendee);
+			attendee.setEvent(null);
+		}	
+	}
+	
+	public void addOrganizer(EventOrganizer organizer) {
+		if (this.organizers == null) {
+			this.organizers = new ArrayList<>();
+		}
+		organizer.setEvent(this);
+		this.organizers.add(organizer);
+	}	
+
+	
+	public void removeOrganizer(EventOrganizer organizer) {
+		if (this.organizers != null) {
+			this.organizers.remove(organizer);
+			organizer.setEvent(null);
+		}	
+	}	
+	
+	
 }

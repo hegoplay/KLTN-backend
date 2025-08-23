@@ -27,7 +27,7 @@ import iuh.fit.se.entity.Post;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.post_service.dto.CommentRequestDto;
 import iuh.fit.se.services.post_service.dto.CommentResponseDto;
-import iuh.fit.se.services.post_service.dto.PostCreateRequestDto;
+import iuh.fit.se.services.post_service.dto.PostRequestDto;
 import iuh.fit.se.services.post_service.dto.PostWrapperDto;
 import iuh.fit.se.services.post_service.service.CommentService;
 import iuh.fit.se.services.post_service.service.PostService;
@@ -57,7 +57,7 @@ public class PostController {
 	@PreAuthorize("hasRole('MEMBER') or hasRole('ADMIN') or hasRole('LEADER')")
 	@Operation(summary = "Tạo post", description = "Tạo một bài viết mới. Chỉ có người dùng có vai trò MEMBER, ADMIN hoặc LEADER mới có quyền tạo bài viết.")
 	public ResponseEntity<PostWrapperDto> createPost(
-		@RequestBody @Valid PostCreateRequestDto dto,
+		@RequestBody @Valid PostRequestDto dto,
 		HttpServletRequest request
 	) {
 		Post createdPost = postService.createPost(dto);
@@ -77,7 +77,7 @@ public class PostController {
 	// nhật
 	public ResponseEntity<PostWrapperDto> updatePost(
 		@PathVariable String postId,
-		@RequestBody @Valid PostCreateRequestDto dto,
+		@RequestBody @Valid PostRequestDto dto,
 		HttpServletRequest request
 	) {
 		if (!postService.isPostExist(postId)) {

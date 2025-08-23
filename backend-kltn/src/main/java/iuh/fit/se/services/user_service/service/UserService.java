@@ -1,8 +1,5 @@
 package iuh.fit.se.services.user_service.service;
 
-import org.springframework.web.multipart.MultipartFile;
-
-import iuh.fit.se.entity.Attachment;
 import iuh.fit.se.entity.User;
 import iuh.fit.se.services.user_service.dto.RegisterRequestDto;
 
@@ -20,4 +17,7 @@ public interface UserService {
 	
 	User getCurrentUser();
 
+	void resetAllAttendancePoint();
+	
+	void resetAllContributionPoint();
 }

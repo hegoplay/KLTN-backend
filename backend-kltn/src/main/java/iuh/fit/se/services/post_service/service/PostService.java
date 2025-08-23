@@ -5,7 +5,7 @@ import org.springframework.data.domain.Pageable;
 
 import iuh.fit.se.entity.Post;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
-import iuh.fit.se.services.post_service.dto.PostCreateRequestDto;
+import iuh.fit.se.services.post_service.dto.PostRequestDto;
 import iuh.fit.se.services.post_service.dto.SearchPostRequestDto;
 
 public interface PostService {
@@ -14,7 +14,7 @@ public interface PostService {
 	
 	boolean isPostExist(String postId);
 	
-	Post createPost(PostCreateRequestDto post);
+	Post createPost(PostRequestDto post);
 	/*
 	 * Phương thức để chuyển trạng thái post sang accepted.
 	 */
@@ -22,7 +22,7 @@ public interface PostService {
 	
 	Post getAcceptedPostById(String postId);
 	
-	Post updatePost(String postId, PostCreateRequestDto post);
+	Post updatePost(String postId, PostRequestDto post);
 	
 	Post modifyPost(String postId, FunctionStatus status);
 	

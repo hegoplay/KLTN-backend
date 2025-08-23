@@ -2,9 +2,9 @@ package iuh.fit.se.services.event_service.patterns;
 
 import iuh.fit.se.entity.Contest;
 import iuh.fit.se.entity.Event;
-import iuh.fit.se.services.event_service.dto.EventCreateRequestDto;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.enumerator.EventCategory;
+import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -17,10 +17,8 @@ public class ContestFactory extends GenerateEventFactory {
 
 	@Override
 	protected Event generateEvent(EventCreateRequestDto dto) {
-		if (dto.ableToRegister() == null) {
-			throw new IllegalArgumentException("ableToRegister is required for Contest");
-		}
 		Contest contest = eventMapper.toContest(dto);
+		contest.setAbleToRegister(true);
 		return contest;
 	}
 

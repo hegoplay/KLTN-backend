@@ -1,8 +1,6 @@
 package iuh.fit.se.services.user_service.dto;
 
-import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.List;
 
 import iuh.fit.se.entity.enumerator.UserRole;
 import lombok.AllArgsConstructor;
@@ -22,8 +20,6 @@ public class UserInfoResponseDto {
 	Date dateOfBirth;
 	UserRole role;
 	Integer attendancePoint;
-	Integer contributePoint;
+	Integer contributionPoint;
 	Boolean disabled;
-	LocalDateTime lastResetAttendancePoint;
-	LocalDateTime lastResetContributePoint;
 }

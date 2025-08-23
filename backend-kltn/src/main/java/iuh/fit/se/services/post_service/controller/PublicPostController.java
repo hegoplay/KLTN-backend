@@ -1,5 +1,7 @@
 package iuh.fit.se.services.post_service.controller;
 
+import java.time.LocalDate;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -9,8 +11,6 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -61,23 +61,37 @@ public class PublicPostController {
 		return ResponseEntity.ok(postDetailDto);
 	}
 
-	@PostMapping("/search")
+	@GetMapping("/search")
 	@Operation(summary = "Tìm kiếm bài viết công khai", description = """
 		Tìm kiếm các bài viết công khai dựa trên tiêu chí tìm kiếm. 
 		Trả về danh sách các bài viết phù hợp với tiêu chí tìm kiếm.
 		""")
 	
 	public ResponseEntity<PagedModel<EntityModel<PostWrapperDto>>> searchPosts(
-		@RequestBody SearchPostRequestDto searchCriteria,
+		@RequestParam(required = false) String keyword,
+		@Parameter(
+	        description = "Trường để xác định đầu khoảng thời gian đăng là lúc nào",
+	        example = "2023-01-01",
+	        required = false
+	    )
+		@RequestParam(required = false) LocalDate startDate,
+		@Parameter(
+	        description = "Trường để xác định cuối khoảng thời gian đăng là lúc nào",
+	        example = "2023-12-31",
+	        required = false
+	    )
+		@RequestParam(required = false) LocalDate endDate,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
 		@Parameter(
 	        description = "Trường để sắp xếp. Định dạng: fieldName,asc|desc. Ví dụ: createdAt,desc",
-	        example = "createdAt,desc",
+	        example = "postTime,desc",
 	        required = false
 	    )
 		@RequestParam(required = false) String sort
 	) {
+		SearchPostRequestDto searchCriteria = new SearchPostRequestDto(keyword, startDate, endDate);
+		
 		Pageable pageable = PageRequest
 			.of(page, size, PageableUtil.parseSort(sort));
 		Page<Post> allPublicPosts = postService

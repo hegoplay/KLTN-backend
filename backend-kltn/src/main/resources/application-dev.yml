@@ -6,7 +6,7 @@ spring:
     name: backend-kltn
   
   datasource:
-    url: ${SPRING_MYSQL_DATASOURCE_URL:jdbc:mysql://localhost:3306/kltn?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    url: ${SPRING_MYSQL_DATASOURCE_URL:jdbc:mysql://localhost:3306/kltn-dev?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
     username: root
     password: root
   jpa:

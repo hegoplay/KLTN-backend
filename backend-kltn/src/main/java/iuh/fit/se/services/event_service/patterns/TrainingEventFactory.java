@@ -2,8 +2,8 @@ package iuh.fit.se.services.event_service.patterns;
 
 import iuh.fit.se.entity.Event;
 import iuh.fit.se.entity.TrainingEvent;
-import iuh.fit.se.services.event_service.dto.EventCreateRequestDto;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
+import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

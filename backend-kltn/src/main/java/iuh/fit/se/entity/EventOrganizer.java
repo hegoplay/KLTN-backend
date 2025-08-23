@@ -1,6 +1,8 @@
 package iuh.fit.se.entity;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import iuh.fit.se.entity.enumerator.OrganizerRole;
 import jakarta.persistence.CollectionTable;
@@ -15,6 +17,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -54,7 +57,20 @@ public class EventOrganizer {
         name = "organizer_roles", 
         joinColumns = @JoinColumn(name = "organizer_id")
     )
-	List<OrganizerRole> roles;
+	@Builder.Default
+	Set<OrganizerRole> roles = new HashSet<>();
 	
+	public void addRole(OrganizerRole role) {
+		if (this.roles == null) {
+			this.roles = new HashSet<>();
+		}
+		this.roles.add(role);
+	}
+	
+	public void removeRole(OrganizerRole role) {
+		if (this.roles != null) {
+			this.roles.remove(role);
+		}
+	}
 	
 }

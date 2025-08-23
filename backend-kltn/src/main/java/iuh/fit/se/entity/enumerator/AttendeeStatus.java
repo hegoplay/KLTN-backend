@@ -4,5 +4,5 @@ public enum AttendeeStatus {
 	REGISTERED,
 	CHECKED,
 	BANNED,
-	MISSED,
+//	MISSED,
 }

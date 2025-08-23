@@ -1,9 +1,5 @@
 package iuh.fit.se.services.user_service.dto;
 
-import java.time.LocalDateTime;
-import java.util.Date;
-
-import iuh.fit.se.entity.enumerator.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

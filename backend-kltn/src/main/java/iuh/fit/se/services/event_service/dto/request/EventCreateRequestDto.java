@@ -1,10 +1,11 @@
-package iuh.fit.se.services.event_service.dto;
+package iuh.fit.se.services.event_service.dto.request;
 
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
+import iuh.fit.se.services.event_service.dto.LocationDto;
 import iuh.fit.se.services.event_service.dto.enumerator.EventCategory;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -29,7 +30,6 @@ public record EventCreateRequestDto(
 		example = "PENDING",
 		requiredMode = RequiredMode.REQUIRED
 	) FunctionStatus status,
-	Boolean ableToRegister, // phục vụ cho contest
 	@NotNull(
 		message = "Danh sách người tổ chức không được để trống"
 	) List<EventRequestOrganizerDto> organizers,
