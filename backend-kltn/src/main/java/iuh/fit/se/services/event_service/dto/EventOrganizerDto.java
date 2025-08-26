@@ -15,7 +15,8 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventOrganizerDto {
-	String id;
+	String organizerId;
+	String eventId;
 	UserShortInfoResponseDto organizer;
 	String roleContent;
 	List<OrganizerRole> roles;

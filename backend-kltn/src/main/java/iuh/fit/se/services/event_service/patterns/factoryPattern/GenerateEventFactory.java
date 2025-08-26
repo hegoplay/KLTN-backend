@@ -1,4 +1,4 @@
-package iuh.fit.se.services.event_service.patterns;
+package iuh.fit.se.services.event_service.patterns.factoryPattern;
 
 import iuh.fit.se.entity.Event;
 import iuh.fit.se.entity.User;

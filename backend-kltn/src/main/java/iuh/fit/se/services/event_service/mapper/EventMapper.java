@@ -38,16 +38,21 @@ public abstract class EventMapper {
 		TrainingEvent event
 	);
 	public EventDetailResponseDto toEventDetailResponseDto(Event event) {
+		
+		EventDetailResponseDto dto;
+		
 		if (event instanceof Seminar seminar) {
-			return toEventDetailResponseDto(seminar);
+			dto = toEventDetailResponseDto(seminar);
 		} else if (event instanceof Contest contest) {
-			return toEventDetailResponseDto(contest);
+			dto = toEventDetailResponseDto(contest);
 		} else if (event instanceof TrainingEvent trainingEvent) {
-			return toEventDetailResponseDto(trainingEvent);
+			dto = toEventDetailResponseDto(trainingEvent);
 		} else {
 			throw new IllegalArgumentException(
 				"Unknown event type: " + event.getClass());
 		}
+		
+		return dto;
 	}
 
 	@AfterMapping
@@ -55,7 +60,7 @@ public abstract class EventMapper {
 		@MappingTarget EventDetailResponseDto.EventDetailResponseDtoBuilder builder,
 		TrainingEvent event
 	) {
-		builder.isDone(Boolean.valueOf(event.isDone()));
+		builder.done(Boolean.valueOf(event.isDone()));
 		if (event.getTraining() != null) {
 			builder.trainingId(event.getTraining().getId());
 		}
@@ -67,7 +72,7 @@ public abstract class EventMapper {
 		@MappingTarget EventWrapperDto.EventWrapperDtoBuilder builder,
 		Event event
 	) {
-		builder.isDone(Boolean.valueOf(event.isDone()));
+		builder.done(Boolean.valueOf(event.isDone()));
 		if (event.isDone()) {
 			builder.timeStatus(EventTimeStatus.LOCKED);
 		} else if (event
@@ -77,7 +82,7 @@ public abstract class EventMapper {
 			builder.timeStatus(EventTimeStatus.UPCOMING);
 		} else if (event
 			.getLocation()
-			.getStartTime()
+			.getEndTime()
 			.isBefore(LocalDateTime.now())) {
 			builder.timeStatus(EventTimeStatus.COMPLETED);
 		} else {

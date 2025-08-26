@@ -17,6 +17,6 @@ public class EventWrapperDto {
 	String content;
 	Integer multiple;
 	FunctionStatus status;
-	Boolean isDone;
+	Boolean done;
 	EventTimeStatus timeStatus;
 }

@@ -24,4 +24,9 @@ public class TrainingEvent extends Event {
 	@JoinColumn(name = "training_id")
 	@ToString.Exclude
 	Training training;
+
+	@Override
+	public boolean isSingleTable() {
+		return false;
+	}
 }

@@ -1,35 +1,47 @@
 package iuh.fit.se.services.event_service.serviceImpl;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
+import iuh.fit.se.entity.Attendee;
 import iuh.fit.se.entity.Contest;
 import iuh.fit.se.entity.Event;
+import iuh.fit.se.entity.EventOrganizer;
 import iuh.fit.se.entity.GlobalConfiguration;
 import iuh.fit.se.entity.Seminar;
-import iuh.fit.se.entity.TrainingEvent;
 import iuh.fit.se.entity.User;
+import iuh.fit.se.entity.enumerator.AttendeeStatus;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
+import iuh.fit.se.entity.enumerator.OrganizerRole;
+import iuh.fit.se.entity.id_class.AttendeeId;
+import iuh.fit.se.entity.id_class.EventOrganizerId;
 import iuh.fit.se.repository.GlobalConfigurationRepository;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.enumerator.EventCategory;
 import iuh.fit.se.services.event_service.dto.enumerator.EventSearchType;
 import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
-import iuh.fit.se.services.event_service.dto.request.EventSearchRequest;
+import iuh.fit.se.services.event_service.dto.request.EventSearchRequestDto;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
-import iuh.fit.se.services.event_service.patterns.ContestFactory;
-import iuh.fit.se.services.event_service.patterns.GenerateEventFactory;
-import iuh.fit.se.services.event_service.patterns.SeminarFactory;
-import iuh.fit.se.services.event_service.patterns.TrainingEventFactory;
+import iuh.fit.se.services.event_service.mapper.EventOrganizerMapper;
+import iuh.fit.se.services.event_service.patterns.factoryPattern.ContestFactory;
+import iuh.fit.se.services.event_service.patterns.factoryPattern.GenerateEventFactory;
+import iuh.fit.se.services.event_service.patterns.factoryPattern.SeminarFactory;
+import iuh.fit.se.services.event_service.patterns.factoryPattern.TrainingEventFactory;
+import iuh.fit.se.services.event_service.repository.EventAttendeeRepository;
+import iuh.fit.se.services.event_service.repository.EventOrganizerRepository;
 import iuh.fit.se.services.event_service.repository.EventRepository;
+import iuh.fit.se.services.event_service.service.EventCodeService;
 import iuh.fit.se.services.event_service.service.EventService;
 import iuh.fit.se.services.event_service.specification.EventSpecification;
 import iuh.fit.se.services.user_service.repository.UserRepository;
 import iuh.fit.se.services.user_service.service.UserService;
 import iuh.fit.se.util.ContextUtil;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -41,16 +53,18 @@ import lombok.extern.slf4j.Slf4j;
 public class EventServiceImpl implements EventService {
 
 	EventMapper eventMapper;
+	EventOrganizerMapper eventOrganizerMapper;
 
 	UserService userService;
 
 	EventRepository eventRepository;
-
 	UserRepository userRepository;
+	EventOrganizerRepository eventOrganizerRepository;
+	EventAttendeeRepository eventAttendeeRepository;
 
 	GlobalConfigurationRepository globalConfigurationRepository;
-	
-	
+
+	EventCodeService eventCodeService;
 
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('MEMBER') or hasRole('LEADER')")
@@ -66,7 +80,13 @@ public class EventServiceImpl implements EventService {
 		GenerateEventFactory factory = getFactory(dto);
 		Event e = factory.createEvent(dto, userService);
 		Event savedEvent = eventRepository.save(e);
-		return factory.toEventDetailResponseDto(savedEvent);
+		EventDetailResponseDto eventDetailResponseDto = factory
+			.toEventDetailResponseDto(savedEvent);
+
+		Attendee attendee = savedEvent.getAttendeeByUserId(currentUser.getId());
+		eventDetailResponseDto.setUserAttendeeStatus(attendee.getStatus());
+
+		return eventDetailResponseDto;
 	}
 
 	private GenerateEventFactory getFactory(EventCreateRequestDto dto) {
@@ -86,7 +106,7 @@ public class EventServiceImpl implements EventService {
 	public void deleteEvent(String eventId) {
 		// ContextUtil.getCurrentUsername();
 		if (!ContextUtil.isLeader()) {
-			throw new SecurityException("Only the host can delete this event");
+			throw new SecurityException("Only leaders can delete events");
 		}
 		Event event = eventRepository
 			.findById(eventId)
@@ -104,18 +124,20 @@ public class EventServiceImpl implements EventService {
 	}
 
 	@Override
-	public Page<Event> searchPublicEvents(EventSearchRequest request) {
+	public Page<Event> searchPublicEvents(EventSearchRequestDto request) {
 		Specification<Event> spec = Specification.unrestricted();
 
 		spec = spec.and(EventSpecification.hasStatus(FunctionStatus.ACCEPTED));
-		spec = spec.and(EventSpecification.exceptOfType(TrainingEvent.class));
+		// spec =
+		// spec.and(EventSpecification.exceptOfType(TrainingEvent.class));
+		spec = spec.and(EventSpecification.isSingle(true));
 		return searchEvents(spec, request);
 	}
 
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER')")
 	public Page<Event> searchUserEvents(
-		EventSearchRequest request,
+		EventSearchRequestDto request,
 		String userId,
 		FunctionStatus status
 	) {
@@ -130,7 +152,7 @@ public class EventServiceImpl implements EventService {
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER')")
 	public Page<Event> searchAllEvents(
-		EventSearchRequest request,
+		EventSearchRequestDto request,
 		FunctionStatus status
 	) {
 		Specification<Event> spec = Specification.unrestricted();
@@ -146,7 +168,7 @@ public class EventServiceImpl implements EventService {
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('MEMBER') or hasRole('LEADER')")
 	public Page<Event> searchMyEvents(
-		EventSearchRequest request,
+		EventSearchRequestDto request,
 		FunctionStatus status
 	) {
 
@@ -165,16 +187,57 @@ public class EventServiceImpl implements EventService {
 
 	@Override
 	public EventDetailResponseDto getEventById(String eventId) {
-		return eventMapper
-			.toEventDetailResponseDto(eventRepository
-				.findById(eventId)
-				.orElseThrow(() -> new IllegalArgumentException(
-					"Event with ID " + eventId + " does not exist")));
+		Event event = eventRepository
+			.findById(eventId)
+			.orElseThrow(() -> new IllegalArgumentException(
+				"Event with ID " + eventId + " does not exist"));
+
+		EventDetailResponseDto dto = eventMapper
+			.toEventDetailResponseDto(event);
+
+		return dto;
+	}
+
+	@Override
+	@Transactional
+	public EventDetailResponseDto getEventByIdAndUserId(
+		String eventId,
+		String userId
+	) {
+
+		Event event = eventRepository
+			.findByIdAndFetchAttendees(eventId)
+			.orElseThrow(() -> new IllegalArgumentException(
+				"Event with ID " + eventId + " does not exist"));
+
+		EventDetailResponseDto dto = eventMapper
+			.toEventDetailResponseDto(event);
+
+		User user = userRepository
+			.findById(userId)
+			.orElseThrow(() -> new IllegalArgumentException(
+				"User with ID " + userId + " does not exist"));
+
+		log.info("Attendee list: {}", event.getAttendeesMap());
+
+		Attendee attendee = event.getAttendeeByUserId(user.getId());
+		if (attendee != null) {
+			dto.setUserAttendeeStatus(attendee.getStatus());
+			EventOrganizer organizer = event.getOrganizerByUserId(user.getId());
+			if (organizer != null) {
+				dto
+					.setUserAsOrganizer(
+						eventOrganizerMapper.toEventOrganizerDto(organizer));
+			}
+
+		}
+
+		return dto;
 	}
 
 	private Page<Event> searchEvents(
 		Specification<Event> spec,
-		EventSearchRequest request
+		EventSearchRequestDto request
 	) {
 
 		// Keyword search (title hoặc content)
@@ -279,8 +342,202 @@ public class EventServiceImpl implements EventService {
 	}
 
 	@Override
-	public String getEventOTP(String eventId) {
-		// TODO Auto-generated method stub
-		return null;
+	@PreAuthorize("hasRole('LEADER') or hasRole('ADMIN') or hasRole('MEMBER')")
+	public String getEventCode(String eventId) {
+		// TODO: tạo test case
+		Event event = eventRepository
+			.findById(eventId)
+			.orElseThrow(() -> new IllegalArgumentException(
+				"Event with ID " + eventId + " does not exist"));
+		// Check if the current user is the host or an attendee
+		User currentUser = userService.getCurrentUser();
+		// Check if the user is the host, an organizer, or a leader
+		if (!currentUser.isLeader()
+			&& event.getHost().getId() != currentUser.getId()) {
+			EventOrganizer organizer = event
+				.getOrganizerByUserId(currentUser.getId());
+			if (organizer == null || organizer
+				.getRoles()
+				.contains(iuh.fit.se.entity.enumerator.OrganizerRole.CODE)) {
+				throw new SecurityException(
+					"Only the host, organizers, or leader can generate or view the OTP for this event");
+			}
+		}
+		if (!checkValidTime(event)) {
+			throw new IllegalStateException(
+				"Không thể phát sinh mã code ngoài thời gian diễn ra sự kiện");
+		}
+
+		if (eventCodeService.hasEventCode(eventId)) {
+			return eventCodeService.getCurrentEventCode(eventId);
+		} else {
+			String otp = eventCodeService.generateOrUpdateEventCode(eventId);
+			return otp;
+		}
+	}
+
+	@Override
+	public void selfCheckInEvent(String eventId, String userId, String code) {
+		if (eventCodeService.verifyEventCode(eventId, code)) {
+			Event event = eventRepository
+				.findById(eventId)
+				.orElseThrow(() -> new IllegalArgumentException(
+					"Event with ID " + eventId + " does not exist"));
+			checkInEvent(event, userId);
+		} else {
+			throw new IllegalArgumentException(
+				"Invalid code for event " + eventId);
+		}
+	}
+
+	@Override
+	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
+	public void manualCheckInEvent(String eventId,List<String> attendeeIds) {
+		String currentUserId = userService.getCurrentUser().getId(); 
+		Event event = eventRepository
+			.findById(eventId)
+			.orElseThrow(() -> new IllegalArgumentException(
+				"Event with ID " + eventId + " does not exist"));
+		if (!checkEventRole(event, currentUserId, OrganizerRole.CHECK_IN)) {
+			throw new SecurityException(
+				"Only the host, organizers with CHECKIN role, or leader can manually check-in for this event");
+		}
+		for (String attendeeId : attendeeIds) {
+			try {
+	            checkInEvent(event, attendeeId);
+	        } catch (Exception e) {
+	            log.error("Check-in failed for {}: {}", attendeeId, e.getMessage());
+	            // Continue với attendee tiếp theo
+	        }
+		}
+		
+//		eventRepository.save(event);
+	}
+	
+
+	@Override
+	@PreAuthorize("hasRole('MEMBER') or hasRole('ADMIN') or hasRole('LEADER')")
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void checkInEvent(Event event, String userId) {
+
+		if (!checkValidTime(event)) {
+			throw new IllegalStateException(
+				"Không thể check-in ngoài thời gian diễn ra sự kiện");
+		}
+		event.checkIn(userId);
+		eventRepository.save(event);
+	}
+
+	private boolean checkValidTime(Event event) {
+		java.time.LocalDateTime now = java.time.LocalDateTime.now();
+		return now.isAfter(event.getLocation().getStartTime())
+			&& now.isBefore(event.getLocation().getEndTime());
+	}
+	
+
+	@Override
+	@Transactional
+	public void triggerRegisterEvent(Event event, String userId) {
+		// Kiểm tra event có phải là single không (hạn chế đăng ký trực tiếp)
+		if (event.getSingle() == null || !event.getSingle()) {
+			throw new IllegalStateException(
+				"Cannot register for training events directly");
+		}
+		
+		AttendeeId attendeeId = AttendeeId
+			.builder()
+			.userId(userId)
+			.eventId(event.getId())
+			.build();
+//		kiểm tra nếu đã đăng ký rồi thì bỏ đăng ký
+		if (eventAttendeeRepository.existsById(attendeeId)) {
+			Attendee attendee = eventAttendeeRepository
+				.findById(attendeeId)
+				.get();
+			if (attendee.getStatus() == AttendeeStatus.BANNED) {
+				throw new IllegalStateException(
+					"User with ID " + userId + " is banned from this event");
+			}
+			if (attendee.getStatus() == AttendeeStatus.CHECKED) {
+				throw new IllegalStateException("User with ID " + userId
+					+ " has already checked in to this event");
+			}
+			if (attendee.getStatus() == AttendeeStatus.REGISTERED) {
+				event.removeAttendee(attendee);
+				log
+					.info("User with ID {} has unregistered from event {}",
+						userId, event.getId());
+
+			} else {
+				attendee.setStatus(AttendeeStatus.REGISTERED);
+			}
+
+		} else {
+//			thêm mới
+			event
+				.addAttendee(Attendee
+					.builder()
+					.user(userRepository.getReferenceById(userId))
+					.status(AttendeeStatus.REGISTERED)
+					.build());
+		}
+		eventRepository.save(event);
+	}
+
+	@Override
+	public void selfTriggerRegisterEvent(String eventId) {
+		String currentUserId = userService.getCurrentUser().getId();
+		Event event = eventRepository
+			.findById(eventId)
+			.orElseThrow(() -> new IllegalArgumentException(
+				"Event with ID " + eventId + " does not exist"));
+		if (event instanceof Contest) {
+			Contest contest = (Contest) event;
+			if (!contest.isAbleToRegister()) {
+				throw new IllegalStateException(
+					"Không thể đăng ký cho cuộc thi không cho phép đăng ký");
+			}
+
+		}
+		triggerRegisterEvent(event, currentUserId);
+	}
+
+	@Override
+	@Transactional
+	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
+	public void manualTriggerRegisterEvent(String eventId, List<String> attendeesIds) {
+		String currentUserId = userService.getCurrentUser().getId();
+		Event event = eventRepository
+			.findById(eventId)
+			.orElseThrow(() -> new IllegalArgumentException(
+				"Event with ID " + eventId + " does not exist"));
+		if (!checkEventRole(event, currentUserId, OrganizerRole.REGISTER)) {
+			throw new SecurityException(
+				"Only the host, organizers with REGISTER role, or leader can manually register for this event");
+		}
+		attendeesIds.forEach(attendeeId -> 
+			triggerRegisterEvent(event, attendeeId)
+		);
+	}
+
+	
+//	hàm này để rút gọn các đoạn kiểm tra role của user hiện tại
+	private boolean checkEventRole(Event event, String userId, OrganizerRole role) {
+		if (event.getHost().getId() != userId && !ContextUtil.isLeader()) {
+			EventOrganizer organizer = eventOrganizerRepository
+				.findById(EventOrganizerId
+					.builder()
+					.organizerId(userId)
+					.eventId(event.getId())
+					.build())
+				.orElseThrow(
+					() -> new SecurityException("Organizer with user ID "
+						+ userId + " is not associated with event " + event.getId()));
+			if (!organizer
+				.getRoles()
+				.contains(role)) return false;
+			
+		}
+		return true;
 	}
 }

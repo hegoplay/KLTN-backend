@@ -5,10 +5,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.event_service.dto.enumerator.EventSearchType;
 
-public record EventSearchRequest(
+public record EventSearchRequestDto(
     String keyword,
     EventSearchType type, // Enum: SEMINAR, CONTEST, TRAINING
     Boolean isDone,

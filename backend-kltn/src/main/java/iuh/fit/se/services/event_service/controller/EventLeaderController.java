@@ -5,6 +5,7 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,8 +20,8 @@ import iuh.fit.se.entity.Event;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.event_service.dto.EventWrapperDto;
 import iuh.fit.se.services.event_service.dto.enumerator.EventSearchType;
-import iuh.fit.se.services.event_service.dto.request.EventSearchRequest;
-import iuh.fit.se.services.event_service.dto.request.EventStatusUpdateRequest;
+import iuh.fit.se.services.event_service.dto.request.EventSearchRequestDto;
+import iuh.fit.se.services.event_service.dto.request.EventStatusUpdateRequestDto;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import iuh.fit.se.services.event_service.service.EventService;
 import iuh.fit.se.util.PageableUtil;
@@ -60,7 +61,7 @@ public class EventLeaderController {
 		@RequestParam(defaultValue = "10") int size,
 		@RequestParam(defaultValue = "location.startTime,asc") String sort,
 		@RequestParam FunctionStatus status) {
-        EventSearchRequest request = new EventSearchRequest(
+        EventSearchRequestDto request = new EventSearchRequestDto(
             keyword, eventType, isDone, page, size, PageableUtil.parseSort(sort)
         );
 
@@ -82,13 +83,21 @@ public class EventLeaderController {
 		@RequestParam(defaultValue = "10") int size,
 		@RequestParam(defaultValue = "location.startTime,asc") String sort,
 		@RequestParam FunctionStatus status) {
-		EventSearchRequest request = new EventSearchRequest(
+		EventSearchRequestDto request = new EventSearchRequestDto(
 			keyword, eventType, isDone, page, size, PageableUtil.parseSort(sort)
 		);
 
 		Page<Event> events = eventService.searchUserEvents(request, null,status);
 		return ResponseEntity.ok(pagedResourcesAssembler
 			.toModel(events.map(eventMapper::toEventWrapperDto)));
+	}
+	
+	@DeleteMapping("/{eventId}")
+	public ResponseEntity<Void> deleteEvent(
+		@PathVariable String eventId
+	) {
+		eventService.deleteEvent(eventId);
+		return ResponseEntity.noContent().build();
 	}
 	
 	@PatchMapping("/{eventId}/trigger-done")
@@ -102,7 +111,7 @@ public class EventLeaderController {
 	@PatchMapping("/{eventId}/status")
 	public ResponseEntity<Void> updateEventStatus(
 		@RequestParam String eventId,
-		@RequestBody EventStatusUpdateRequest request
+		@RequestBody EventStatusUpdateRequestDto request
 	) {
 		eventService.updateEventStatus(eventId,request.status());
 		return ResponseEntity.accepted().build();

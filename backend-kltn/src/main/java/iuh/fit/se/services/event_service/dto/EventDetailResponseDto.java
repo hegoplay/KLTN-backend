@@ -2,6 +2,8 @@ package iuh.fit.se.services.event_service.dto;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import iuh.fit.se.entity.enumerator.AttendeeStatus;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.event_service.dto.enumerator.EventCategory;
 import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
@@ -22,20 +24,26 @@ public class EventDetailResponseDto {
 	LocationDto location;
 	String title;
 	String content;
-//	List<AttendeeDto> attendees;
 	List<EventOrganizerDto> organizers;
 	Integer multiple;
 	FunctionStatus status;
-	Boolean isDone;
+	Boolean done;
 	EventCategory category;
-	
-//	contest serving fields
+	Boolean isHost;
+	EventOrganizerDto userAsOrganizer;
+	@Schema(
+		description = "Trạng thái tham gia của người dùng hiện tại. Nếu là null thì người dùng chưa đăng ký tham gia sự kiện.",
+		example = "PENDING"
+	)
+	AttendeeStatus userAttendeeStatus;
+
+	// contest serving fields
 	List<ExamResultDto> examResults;
 	Boolean ableToRegister;
-	
+
 	// training event serving fields
 	String trainingId;
-	
-//	seminar serving fields
+
+	// seminar serving fields
 	List<String> reviews;
 }

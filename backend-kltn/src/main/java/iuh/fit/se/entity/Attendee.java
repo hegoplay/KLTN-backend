@@ -2,6 +2,7 @@ package iuh.fit.se.entity;
 
 import iuh.fit.se.entity.enumerator.AttendeeStatus;
 import iuh.fit.se.entity.id_class.AttendeeId;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -9,10 +10,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 
 @Data
@@ -23,17 +28,33 @@ import lombok.experimental.FieldDefaults;
 @IdClass(AttendeeId.class)
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString
 public class Attendee {
+
 	@Id
-    @ManyToOne
-    @JoinColumn(name = "event_id")
+	@Column(name = "event_id")
+	@EqualsAndHashCode.Include
+	String eventId;
+
+	@Id
+	@Column(name = "user_id")
+	@EqualsAndHashCode.Include
+	String userId;
+
+	@ManyToOne
+	@JoinColumn(name = "event_id", insertable = false, updatable = false)
+	@MapsId("eventId")
+	@ToString.Exclude
 	Event event;
-	
-	@Id
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+
+	@ManyToOne
+	@JoinColumn(name = "user_id", insertable = false, updatable = false)
+	@MapsId("userId")
+	@ToString.Exclude
 	User user;
-	
+
 	@Enumerated(EnumType.STRING)
-	AttendeeStatus status;
+	@Builder.Default
+	AttendeeStatus status = AttendeeStatus.REGISTERED;
 }

@@ -139,4 +139,14 @@ public class UserServiceImpl implements UserService {
 			.setConfigValueFromDateTime(java.time.LocalDateTime.now());
 	}
 
+	@Override
+	public User getUserByKeyword(String keyword) {
+		User user = userRepository.findByUsernameOrEmail(keyword, keyword)
+			.orElse(null);
+		if (user == null) {
+			user = userRepository.findById(keyword).orElse(null);
+		}
+		return user;
+	}
+
 }

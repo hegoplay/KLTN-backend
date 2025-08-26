@@ -1,4 +1,4 @@
-package iuh.fit.se.services.event_service.patterns;
+package iuh.fit.se.services.event_service.patterns.factoryPattern;
 
 import iuh.fit.se.entity.Contest;
 import iuh.fit.se.entity.Event;
@@ -11,21 +11,22 @@ import lombok.experimental.FieldDefaults;
 
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
-public class ContestFactory extends GenerateEventFactory {
+public class ClosedContestFactory extends GenerateEventFactory {
 
 	EventMapper eventMapper;
 
 	@Override
 	protected Event generateEvent(EventCreateRequestDto dto) {
 		Contest contest = eventMapper.toContest(dto);
-		contest.setAbleToRegister(true);
+		contest.setAbleToRegister(false);
 		return contest;
 	}
 
 	@Override
 	public EventDetailResponseDto toEventDetailResponseDto(Event e) {
 		var dto = eventMapper.toEventDetailResponseDto((Contest) e);
-		dto.setCategory(EventCategory.CONTEST);
+		dto.setCategory(EventCategory.CLOSED_CONTEST);
+		
 		return dto;
 	}
 

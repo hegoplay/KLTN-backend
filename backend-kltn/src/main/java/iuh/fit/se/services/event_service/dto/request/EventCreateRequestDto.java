@@ -15,29 +15,26 @@ public record EventCreateRequestDto(
 	@Schema(
 		description = "Tiêu đề sự kiện",
 		example = "Hội thảo về Công nghệ Thông tin 2024",
-		requiredMode = RequiredMode.REQUIRED
-	) @NotBlank(message = "Tiêu đề không được để trống") String title,
+		requiredMode = RequiredMode.REQUIRED)
+	@NotBlank(message = "Tiêu đề không được để trống") String title,
 	@Schema(
 		description = "Nội dung chi tiết về sự kiện",
 		example = "Sự kiện này sẽ tập trung vào các xu hướng mới nhất trong lĩnh vực Công nghệ Thông tin...",
-		requiredMode = RequiredMode.REQUIRED
-	) @NotBlank(message = "Nội dung không được để trống") String content,
+		requiredMode = RequiredMode.REQUIRED)
+	@NotBlank(message = "Nội dung không được để trống") String content,
 
 	@NotNull(message = "Địa điểm tổ chức không được null") LocationDto location,
 	@Min(1) Integer multiple,
 	@Schema(
 		description = "Trạng thái lúc khởi tạo sự kiện (Chỉ được là PENDING hoặc ARCHIVED)",
 		example = "PENDING",
-		requiredMode = RequiredMode.REQUIRED
-	) FunctionStatus status,
+		requiredMode = RequiredMode.REQUIRED) FunctionStatus status,
 	@NotNull(
-		message = "Danh sách người tổ chức không được để trống"
-	) List<EventRequestOrganizerDto> organizers,
+		message = "Danh sách người tổ chức không được để trống") List<EventRequestOrganizerDto> organizers,
 	String trainingId, // phục vụ cho training event
 	@Schema(description = "Loại sự kiện", defaultValue = "SEMINAR")
 	@NotNull(
-		message = "Loại sự kiện không được để trống"
-	) EventCategory category
+		message = "Loại sự kiện không được để trống") EventCategory category
 ) {
 	@Schema(hidden = true)
 	public boolean isCreateAble() {

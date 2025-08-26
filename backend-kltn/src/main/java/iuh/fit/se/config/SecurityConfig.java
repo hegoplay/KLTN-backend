@@ -51,7 +51,7 @@ public class SecurityConfig {
 				.permitAll()
 				.requestMatchers("/api/leader/**")
 				.hasAnyRole("ADMIN", "LEADER") // only allow ADMIN and LEADER
-				.requestMatchers("api/public/**")
+				.requestMatchers("/api/public/**")
 				.permitAll() // Allow public access to posts
 				.requestMatchers("/actuator/**")
 				.permitAll() // Allow public access to actuator endpoints

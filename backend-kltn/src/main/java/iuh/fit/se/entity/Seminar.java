@@ -35,4 +35,9 @@ public class Seminar extends Event{
     )
     @Column(name = "review", length = 1000) // Tên column và độ dài
 	List<String> reviews = List.of();
+
+	@Override
+	public boolean isSingleTable() {
+		return true;
+	}
 }

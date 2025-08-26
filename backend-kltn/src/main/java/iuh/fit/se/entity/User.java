@@ -1,7 +1,6 @@
 package iuh.fit.se.entity;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -22,6 +21,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
@@ -32,11 +32,13 @@ import lombok.experimental.FieldDefaults;
 @lombok.Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User implements java.io.Serializable, UserDetails {
 	private static final long serialVersionUID = -6004794275702672464L;
 
 	@Id
 	@GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
+	@EqualsAndHashCode.Include
 	String id;
 
 	@Column(unique = true, nullable = false)

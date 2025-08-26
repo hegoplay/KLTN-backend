@@ -5,4 +5,5 @@ public enum OrganizerRole {
 	CHECK_IN,
 	REGISTER,
 	BAN,
+	CODE,
 }

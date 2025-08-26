@@ -16,6 +16,8 @@ public interface UserService {
 	User getUserByUsernameOrEmail(String usernameOrEmail);
 	
 	User getCurrentUser();
+	
+	User getUserByKeyword(String keyword);
 
 	void resetAllAttendancePoint();
 	

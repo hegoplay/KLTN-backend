@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 @SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
-	JwtTokenUtil jwtTokenUtil;
 	UserService userService;
 	UserMapper userMapper;
 
@@ -40,9 +39,18 @@ public class UserController {
 	public ResponseEntity<UserInfoResponseDto> getCurrentUser(
 		HttpServletRequest request
 	) {
-		String userId = jwtTokenUtil
-			.getUserIdFromToken(jwtTokenUtil.getTokenFromRequest(request));
-		User user = userService.getUserById(userId);
+		User user = userService.getCurrentUser();
+
+		UserInfoResponseDto userInfo = userMapper.toUserInfoResponseDto(user);
+
+		return ResponseEntity.ok(userInfo);
+	}
+	
+	@GetMapping("/{keyword}")
+	public ResponseEntity<UserInfoResponseDto> getUserByKeyword(
+		String keyword
+	) {
+		User user = userService.getUserByKeyword(keyword);
 
 		UserInfoResponseDto userInfo = userMapper.toUserInfoResponseDto(user);
 

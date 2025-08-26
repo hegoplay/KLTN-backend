@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
@@ -19,6 +20,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(callSuper = true)
 public class Contest extends Event {
 
 	@OneToMany(
@@ -32,4 +34,9 @@ public class Contest extends Event {
 
 	@Builder.Default
 	boolean ableToRegister = true;
+
+	@Override
+	public boolean isSingleTable() {
+		return true;
+	}
 }

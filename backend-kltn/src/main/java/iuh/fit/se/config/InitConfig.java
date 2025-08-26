@@ -2,7 +2,7 @@ package iuh.fit.se.config;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.stream.IntStream;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +33,7 @@ public class InitConfig {
 	PasswordEncoder passwordEncoder;
 
 	@Bean
+	@Transactional
 	CommandLineRunner initDemoUser(
 		UserRepository userRepository,
 		EventRepository eventRepository,
@@ -58,33 +59,60 @@ public class InitConfig {
 						.builder()
 						.title("Sự kiện mẫu")
 						.content("Đây là sự kiện mẫu được tạo tự động.")
-						.location(
-							new Location("H32", LocalDateTime.now().plusDays(3),
-								LocalDateTime.now().plusDays(3).plusHours(2)))
+						.location(new Location("H32",
+							LocalDateTime.now().plusDays(-3),
+							LocalDateTime.now().plusDays(3).plusHours(2)))
 						.multiple(1)
 						.host(demoUser)
 						.status(
 							iuh.fit.se.entity.enumerator.FunctionStatus.ACCEPTED)
-						.isDone(false)
+						.done(false)
 						.ableToRegister(true)
 						.build();
-					
+
 					event
 						.addAttendee(Attendee
 							.builder()
 							.user(demoUser)
-							.status(AttendeeStatus.CHECKED)
+							.status(AttendeeStatus.REGISTERED)
 							.build());
+					log.info("Event info: {}", event);
 					eventRepository.save(event);
-					System.out.println("Đã tạo tài khoản demo: admin/admin");
+					log.info("Đã tạo tài khoản demo: admin/admin");
 					log.info("Đã tạo sự kiện mẫu.");
 				} catch (Exception e) {
 					log.info("Lỗi khi tạo sự kiện mẫu: " + e.getMessage());
-//					e.printStackTrace();
-//					userRepository.delete(demoUser);
+					// e.printStackTrace();
+					// userRepository.delete(demoUser);
 					throw e;
 				}
 			}
+
+			createSampleUser(User
+				.builder()
+				.username("hegoplay")
+				.password(passwordEncoder.encode("Manhvip399!"))
+				.email("pmanh47@gmail.com")
+				.fullName("Pham Mạnh")
+				.role(UserRole.MEMBER)
+				.dateOfBirth(LocalDate.of(2000, 1, 1))
+				.disabled(false)
+				.build(), userRepository);
+
+			IntStream.range(1, 11).forEach(i -> {
+				User user = User
+					.builder()
+					.username("user" + i)
+					.password(passwordEncoder.encode("password"))
+					.email("user" + i + "@example.com")
+					.fullName("User " + i)
+					.role(UserRole.NONE)
+					.dateOfBirth(LocalDate.of(2000, 1, 1))
+					.disabled(false)
+					.build();
+				createSampleUser(user, userRepository);
+			});
+
 			if (globalConfigurationRepo
 				.findByConfigKey(GlobalConfiguration.KEY_LAST_RESET_POINT_TIME)
 				.isEmpty()) {
@@ -96,8 +124,14 @@ public class InitConfig {
 					.setConfigValueFromDateTime(
 						LocalDateTime.now().minusYears(1));
 				globalConfigurationRepo.save(config);
-				log.info("Đã khởi tạo cấu hình hệ thống.");
 			}
 		};
+	}
+
+	private void createSampleUser(User user, UserRepository userRepo) {
+		if (userRepo.findByUsername(user.getUsername()).isEmpty()) {
+			userRepo.save(user);
+			log.info("Đã tạo tài khoản: {}/{}", user.getUsername(), "password");
+		}
 	}
 }
