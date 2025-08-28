@@ -100,4 +100,21 @@ public class EventSpecification {
 		return (root, query, criteriaBuilder) -> criteriaBuilder
 			.isTrue(root.get("single"));
 	}
+	
+	public static Specification<Event> hasTimeBetween(
+		java.time.LocalDateTime start,
+		java.time.LocalDateTime end
+	) {
+		return (root, query, criteriaBuilder) -> {
+			if (start != null && end != null) {
+				return criteriaBuilder.between(root.get("location").get("startTime"), start, end);
+			} else if (start != null) {
+				return criteriaBuilder.greaterThanOrEqualTo(root.get("location").get("startTime"), start);
+			} else if (end != null) {
+				return criteriaBuilder.lessThanOrEqualTo(root.get("location").get("startTime"), end);
+			} else {
+				return criteriaBuilder.conjunction();
+			}
+		};
+	}
 }

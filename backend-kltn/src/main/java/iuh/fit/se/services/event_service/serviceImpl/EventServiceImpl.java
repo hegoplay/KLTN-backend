@@ -269,6 +269,10 @@ public class EventServiceImpl implements EventService {
 				spec = spec.and(EventSpecification.isNotDone());
 			}
 		}
+//		startTime
+		if (request.startTime() != null) {
+			spec = spec.and(EventSpecification.hasTimeBetween(request.startTime(),request.endTime()));
+		}
 
 		return eventRepository.findAll(spec, request.toPageable());
 	}

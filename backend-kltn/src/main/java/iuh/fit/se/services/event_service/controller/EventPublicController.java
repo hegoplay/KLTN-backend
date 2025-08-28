@@ -1,7 +1,10 @@
 package iuh.fit.se.services.event_service.controller;
 
+import java.time.LocalDateTime;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
@@ -71,6 +74,19 @@ public class EventPublicController {
 			example = "false",
 			requiredMode = Schema.RequiredMode.NOT_REQUIRED)
 		@RequestParam(required = false) Boolean isDone,
+		@Schema(
+			description = "Thời gian bắt đầu để lọc sự kiện (ISO format)",
+			example = "2025-01-01T00:00:00")
+		@RequestParam(required = false)
+		@DateTimeFormat(
+			iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+
+		@Schema(
+			description = "Thời gian kết thúc để lọc sự kiện (ISO format)",
+			example = "2025-12-31T23:59:59")
+		@RequestParam(required = false)
+		@DateTimeFormat(
+			iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
 		@Schema(description = """
@@ -80,7 +96,8 @@ public class EventPublicController {
 		@RequestParam(defaultValue = "location.startTime,asc") String sort
 	) {
 		EventSearchRequestDto request = new EventSearchRequestDto(keyword,
-			eventType, isDone, page, size, PageableUtil.parseSort(sort));
+			eventType, isDone, startTime, endTime, page, size,
+			PageableUtil.parseSort(sort));
 
 		Page<Event> events = eventService.searchPublicEvents(request);
 		return ResponseEntity

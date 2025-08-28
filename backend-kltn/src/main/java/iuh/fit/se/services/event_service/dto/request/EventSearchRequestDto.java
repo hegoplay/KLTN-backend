@@ -1,5 +1,7 @@
 package iuh.fit.se.services.event_service.dto.request;
 
+import java.time.LocalDateTime;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -24,6 +26,8 @@ public record EventSearchRequestDto(
 		example = "false",
 		requiredMode = Schema.RequiredMode.NOT_REQUIRED) Boolean isDone,
 	
+	LocalDateTime startTime,
+	LocalDateTime endTime,
 	int page,
 	int size,
 	Sort sortBy

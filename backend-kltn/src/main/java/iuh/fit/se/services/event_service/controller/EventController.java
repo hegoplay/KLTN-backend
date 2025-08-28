@@ -1,5 +1,6 @@
 package iuh.fit.se.services.event_service.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.entity.Attendee;
@@ -148,6 +151,15 @@ public class EventController {
 			required = false,
 			defaultValue = "ALL") EventSearchType eventType,
 		@RequestParam(required = false) Boolean isDone,
+		@DateTimeFormat(
+			iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+
+		@Schema(
+			description = "Thời gian kết thúc để lọc sự kiện (ISO format)",
+			example = "2025-12-31T23:59:59")
+		@RequestParam(required = false)
+		@DateTimeFormat(
+			iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
 		@RequestParam(defaultValue = "location.startTime,asc") String sort,
@@ -155,7 +167,8 @@ public class EventController {
 		HttpServletRequest httpServletRequest
 	) {
 		EventSearchRequestDto request = new EventSearchRequestDto(keyword,
-			eventType, isDone, page, size, PageableUtil.parseSort(sort));
+			eventType, isDone, startTime, endTime, page, size,
+			PageableUtil.parseSort(sort));
 		String tokenFromRequest = jwtT.getTokenFromRequest(httpServletRequest);
 		Page<Event> searchUserEvents = eventService
 			.searchMyEvents(request, status, tokenFromRequest);
