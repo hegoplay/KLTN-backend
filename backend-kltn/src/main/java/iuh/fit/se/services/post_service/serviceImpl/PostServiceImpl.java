@@ -1,7 +1,5 @@
 package iuh.fit.se.services.post_service.serviceImpl;
 
-import java.time.LocalDateTime;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,8 +9,7 @@ import iuh.fit.se.constant.TimeConstant;
 import iuh.fit.se.entity.Post;
 import iuh.fit.se.entity.User;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
-import iuh.fit.se.entity.enumerator.UserRole;
-import iuh.fit.se.errorHandler.InputNotFoundException;
+import iuh.fit.se.errorHandler.NotFoundErrorHandler;
 import iuh.fit.se.services.post_service.aop.PostPermission;
 import iuh.fit.se.services.post_service.aop.PostPermission.ActionType;
 import iuh.fit.se.services.post_service.dto.PostRequestDto;
@@ -72,7 +69,6 @@ public class PostServiceImpl implements PostService {
 		post = updatePostImage(postDto, post);
 
 		Post postResponse = postRepository.save(post);
-		log.info("PostDto info :{}", postDto.toString());
 		return postResponse;
 	}
 
@@ -88,7 +84,7 @@ public class PostServiceImpl implements PostService {
 		log.info("Validating post with ID: {}", postId);
 		Post post = getPostById(postId);
 		if (post.getStatus() != FunctionStatus.PENDING) {
-			throw new RuntimeException("Post is not pending");
+			throw new NotFoundErrorHandler("Post is not pending");
 		}
 		post.setStatus(FunctionStatus.ACCEPTED);
 		return postRepository.save(post);
@@ -106,7 +102,7 @@ public class PostServiceImpl implements PostService {
 	private Post getPostById(String postId) {
 		return postRepository
 			.findById(postId)
-			.orElseThrow(() -> new RuntimeException("Post not found"));
+			.orElseThrow(() -> new NotFoundErrorHandler("Post not found"));
 	}
 
 	@Override
@@ -119,7 +115,7 @@ public class PostServiceImpl implements PostService {
 				"Post status cannot be REJECTED or ACCEPTED when updating a post");
 		}
 		if (postRepository.existsById(postId)) {
-			throw new InputNotFoundException("Post not found");
+			throw new NotFoundErrorHandler("Post not found");
 		}
 		Post existingPost = getPostById(postId);
 		postMapper.updatePost(post, existingPost);
@@ -144,7 +140,7 @@ public class PostServiceImpl implements PostService {
 	@PostPermission(action = ActionType.DELETE)
 	public void deletePost(String postId) {
 		if (!isPostExist(postId)) {
-			throw new RuntimeException("Post not found");
+			throw new NotFoundErrorHandler("Post not found");
 		}
 		postRepository.deleteById(postId);
 	}
@@ -176,7 +172,7 @@ public class PostServiceImpl implements PostService {
 	 private Post updatePostImage(PostRequestDto postDto, Post existingPost) {
 		 if (postDto.featureImageName()!= null && !postDto.featureImageName().isEmpty()) {
 			 var attachment = attachmentRepository.findById(postDto.featureImageName())
-				 .orElseThrow(() -> new RuntimeException("Attachment not found"));
+				 .orElseThrow(() -> new NotFoundErrorHandler("Attachment not found"));
 			 existingPost.setFeatureImage(attachment);
 		 } else {
 			 existingPost.setFeatureImage(null);

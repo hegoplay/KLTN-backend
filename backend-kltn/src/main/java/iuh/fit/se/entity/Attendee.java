@@ -57,4 +57,28 @@ public class Attendee {
 	@Enumerated(EnumType.STRING)
 	@Builder.Default
 	AttendeeStatus status = AttendeeStatus.REGISTERED;
+	
+	public void checkIn() {
+		if (this.status == AttendeeStatus.REGISTERED) {
+			this.status = AttendeeStatus.CHECKED;
+		}
+		else if (this.status == AttendeeStatus.CHECKED) {
+			this.status = AttendeeStatus.CHECKED; // idempotent
+		}
+		else {
+			throw new IllegalStateException("Cannot check-in. Current status: " + this.status);
+		}
+	}
+	
+	public void toggleCheckIn() {
+		if (this.status == AttendeeStatus.REGISTERED) {
+			this.status = AttendeeStatus.CHECKED;
+		}
+		else if (this.status == AttendeeStatus.CHECKED) {
+			this.status = AttendeeStatus.REGISTERED;
+		}
+		else {
+			throw new IllegalStateException("Cannot toggle check-in. Current status: " + this.status);
+		}
+	}
 }

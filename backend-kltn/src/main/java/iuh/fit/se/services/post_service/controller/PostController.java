@@ -20,17 +20,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.entity.Post;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
-import iuh.fit.se.services.post_service.dto.CommentRequestDto;
+import iuh.fit.se.services.post_service.dto.CommentCreateRequestDto;
 import iuh.fit.se.services.post_service.dto.CommentResponseDto;
+import iuh.fit.se.services.post_service.dto.CommentUpdateRequestDto;
 import iuh.fit.se.services.post_service.dto.PostRequestDto;
 import iuh.fit.se.services.post_service.dto.PostWrapperDto;
 import iuh.fit.se.services.post_service.service.CommentService;
 import iuh.fit.se.services.post_service.service.PostService;
+import iuh.fit.se.util.JwtTokenUtil;
 import iuh.fit.se.util.PageableUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -51,6 +53,9 @@ public class PostController {
 	PostService postService;
 	iuh.fit.se.services.post_service.mapper.PostMapping postMapper;
 	CommentService commentService;
+	
+	JwtTokenUtil jwtTokenUtil;
+	
 	PagedResourcesAssembler<PostWrapperDto> pagedResourcesAssembler;
 
 	@PostMapping
@@ -132,15 +137,32 @@ public class PostController {
 	@PostMapping("/comment")
 	@Operation(summary = "Tạo bình luận", description = "Có tài khoản người dùng có thể tạo bình luận cho bài viết.")
 	public ResponseEntity<CommentResponseDto> createComment(
-		@RequestBody @Valid CommentRequestDto dto,
+		@RequestBody @Valid CommentCreateRequestDto dto,
 		HttpServletRequest request
 	) {
 		CommentResponseDto responseDto = commentService.createComment(dto);
 		return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
 	}
+	
+//	cập nhật bình luận, chỉ có người viết mới được phép cập nhật
+	
+	@PutMapping("/comment/{commentId}")
+	@Operation(summary = "Cập nhật bình luận", description = "Chỉ có người tạo bình luận mới có quyền cập nhật bình luận.")
+	public ResponseEntity<CommentResponseDto> updateComment(
+		@PathVariable String commentId,
+		@RequestBody @Valid CommentUpdateRequestDto dto,
+		HttpServletRequest request
+	) {
+		String userId = jwtTokenUtil.getUserIdFromRequest(request); 
+		CommentResponseDto responseDto = commentService
+			.updateComment(commentId, dto.content(), userId);
+		return ResponseEntity.ok(responseDto);
+	}
 
 	@DeleteMapping("/comment/{commentId}")
-	@Operation(summary = "Xoá bình luận", description = "Chỉ có người tạo bình luận hoặc người quản trị viên mới có quyền xoá bình luận.")
+	@Operation(
+		summary = "Xoá bình luận",
+		description = "Chỉ có người tạo bình luận hoặc người quản trị viên mới có quyền xoá bình luận.")
 	public ResponseEntity<Void> deleteComment(@PathVariable String commentId) {
 		commentService.deleteComment(commentId);
 		return ResponseEntity.noContent().build();

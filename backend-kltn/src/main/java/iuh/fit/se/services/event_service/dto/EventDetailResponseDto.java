@@ -4,31 +4,22 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import iuh.fit.se.entity.enumerator.AttendeeStatus;
-import iuh.fit.se.entity.enumerator.FunctionStatus;
-import iuh.fit.se.services.event_service.dto.enumerator.EventCategory;
-import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class EventDetailResponseDto {
-	String id;
-	UserShortInfoResponseDto host;
-	LocationDto location;
-	String title;
-	String content;
+@EqualsAndHashCode(callSuper = true)
+@Schema(description = "DTO dùng để trả về chi tiết thông tin sự kiện")
+public class EventDetailResponseDto extends EventWrapperDto {
 	List<EventOrganizerDto> organizers;
-	Integer multiple;
-	FunctionStatus status;
-	Boolean done;
-	EventCategory category;
 	Boolean isHost;
 	EventOrganizerDto userAsOrganizer;
 	@Schema(
@@ -38,6 +29,10 @@ public class EventDetailResponseDto {
 	AttendeeStatus userAttendeeStatus;
 
 	// contest serving fields
+	@Schema(
+		description = "Danh sách kết quả thi của người dùng hiện tại. Nếu là null thì người dùng chưa tham gia thi.",
+		requiredMode = Schema.RequiredMode.NOT_REQUIRED
+	)
 	List<ExamResultDto> examResults;
 	Boolean ableToRegister;
 

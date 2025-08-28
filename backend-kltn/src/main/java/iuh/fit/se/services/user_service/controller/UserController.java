@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.entity.User;
 import iuh.fit.se.services.user_service.dto.UserInfoResponseDto;
 import iuh.fit.se.services.user_service.mapper.UserMapper;
@@ -23,8 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @Slf4j
-@io.swagger.v3.oas.annotations.tags.Tag(name = "User Management", description = "API này hỗ trợ các chức năng quản lý người dùng, bao gồm lấy thông tin người dùng hiện tại.")
 @SecurityRequirement(name = "bearerAuth")
+@Tag(
+	name = "User Management",
+	description = """
+		API này hỗ trợ các chức năng quản lý người dùng, 
+		bao gồm lấy thông tin người dùng hiện tại.
+		""")
 public class UserController {
 
 	UserService userService;
@@ -34,8 +40,11 @@ public class UserController {
 	public ResponseEntity<String> getDemoUser() {
 		return ResponseEntity.ok("admin/admin");
 	}
+
+	@Operation(
+		summary = "Lấy thông tin người dùng hiện tại",
+		description = "API này trả về thông tin của người dùng hiện tại dựa trên JWT token trong request.")
 	@GetMapping("/me")
-	@Operation(summary = "Lấy thông tin người dùng hiện tại", description = "API này trả về thông tin của người dùng hiện tại dựa trên JWT token trong request.")
 	public ResponseEntity<UserInfoResponseDto> getCurrentUser(
 		HttpServletRequest request
 	) {
@@ -45,7 +54,13 @@ public class UserController {
 
 		return ResponseEntity.ok(userInfo);
 	}
-	
+
+	@Operation(
+		summary = "Tìm kiếm người dùng bằng từ khóa",
+		description = """
+			API này cho phép tìm kiếm người dùng dựa trên từ khóa có thể là username, email hoặc số điện thoại.
+			Từ khóa được truyền dưới dạng tham số trong URL.
+			""")
 	@GetMapping("/{keyword}")
 	public ResponseEntity<UserInfoResponseDto> getUserByKeyword(
 		String keyword

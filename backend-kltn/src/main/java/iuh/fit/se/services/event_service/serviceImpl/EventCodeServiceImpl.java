@@ -7,6 +7,7 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
+import iuh.fit.se.errorHandler.NotFoundErrorHandler;
 import iuh.fit.se.services.event_service.service.EventCodeService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -43,7 +44,7 @@ public class EventCodeServiceImpl implements EventCodeService {
 		String currentCode = codeBucket.get();
 
 		if (currentCode == null) {
-			throw new RuntimeException(
+			throw new NotFoundErrorHandler(
 				"Event chưa được tạo mã code. Vui lòng tạo mã trước.");
 		}
 		return currentCode;
@@ -57,7 +58,6 @@ public class EventCodeServiceImpl implements EventCodeService {
 		boolean isValid = currentCode.equals(enteredCode.trim());
 
 		if (isValid) {
-			log.info("Code verified successfully for event {}", eventId);
 		} else {
 			log
 				.warn(

@@ -3,7 +3,11 @@ package iuh.fit.se.services.event_service.specification;
 import org.springframework.data.jpa.domain.Specification;
 
 import iuh.fit.se.entity.Event;
+import iuh.fit.se.entity.EventOrganizer;
+import iuh.fit.se.entity.User;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 
 public class EventSpecification {
 
@@ -57,6 +61,19 @@ public class EventSpecification {
 	public static Specification<Event> hasHostedUsername(String username) {
 		return (root, query, criteriaBuilder) -> criteriaBuilder
 			.equal(root.get("host").get("username"), username);
+	}
+
+	public static Specification<Event> includeOrganizerId(String organizerId) {
+		
+		
+		return (root, query, criteriaBuilder) -> {
+			
+			// Join với bảng organizers
+			Join<Event, EventOrganizer> organizersJoin = root.join("organizers", JoinType.INNER);			
+			
+			return criteriaBuilder
+			.equal(organizersJoin.get("organizerId"), organizerId);
+		};
 	}
 
 	public static Specification<Event> isNotDone() {

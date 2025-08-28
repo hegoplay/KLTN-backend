@@ -15,6 +15,7 @@ import lombok.experimental.FieldDefaults;
 @lombok.Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "DTO dùng để lưu thông tin địa điểm và thời gian của sự kiện")
 public class LocationDto {
 	@NotBlank(message = "destination must not be blank")
 	@Schema(

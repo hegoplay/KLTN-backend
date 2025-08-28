@@ -5,6 +5,7 @@ import iuh.fit.se.entity.Event;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.enumerator.EventCategory;
 import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -28,6 +29,14 @@ public class ClosedContestFactory extends GenerateEventFactory {
 		dto.setCategory(EventCategory.CLOSED_CONTEST);
 		
 		return dto;
+	}
+
+	@Override
+	protected Event handleUpdateEvent(Event e, EventUpdateRequestDto dto) {
+		Contest contest = (Contest) e;
+		eventMapper.updateEventFromDto(dto, contest);
+		contest.setAbleToRegister(false);
+		return contest;
 	}
 
 }

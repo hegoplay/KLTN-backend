@@ -139,4 +139,8 @@ public class JwtTokenUtil {
 		}
 		return null; // Trả về null nếu không có token
 	}
+	
+	public String getUserIdFromRequest(HttpServletRequest request) {
+		return getUserIdFromToken(getTokenFromRequest(request));
+	}
 }

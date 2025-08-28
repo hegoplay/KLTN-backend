@@ -8,7 +8,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
@@ -16,6 +18,8 @@ import lombok.experimental.FieldDefaults;
 @Table(name = "exam_results", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "contest_id"}))
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @lombok.Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ExamResult {
 
 	@Id

@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import iuh.fit.se.entity.Attendee;
+import iuh.fit.se.errorHandler.NotFoundErrorHandler;
 import iuh.fit.se.services.event_service.repository.EventAttendeeRepository;
 import iuh.fit.se.services.event_service.repository.EventRepository;
 import iuh.fit.se.services.event_service.service.EventAttendeeService;
@@ -28,7 +29,7 @@ public class EventAttendeeServiceImpl implements EventAttendeeService{
 	) {
 		
 		if (!eventRepository.existsById(eventId)) {
-			throw new IllegalArgumentException("Event with id " + eventId + " does not exist");
+			throw new NotFoundErrorHandler("Event with id " + eventId + " does not exist");
 		}
 		return eventAttendeeRepository.findByEventId(eventId, pageable);
 	}

@@ -4,6 +4,7 @@ import iuh.fit.se.entity.Event;
 import iuh.fit.se.entity.Seminar;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -32,6 +33,13 @@ public class SeminarFactory extends GenerateEventFactory {
 			.setCategory(
 				iuh.fit.se.services.event_service.dto.enumerator.EventCategory.SEMINAR);
 		return dto;
+	}
+
+	@Override
+	protected Event handleUpdateEvent(Event e, EventUpdateRequestDto dto) {
+		Seminar seminar = (Seminar) e;
+		eventMapper.updateEventFromDto(dto, seminar);
+		return seminar;
 	}
 
 }

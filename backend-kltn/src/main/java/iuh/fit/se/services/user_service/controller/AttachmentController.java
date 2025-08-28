@@ -31,9 +31,12 @@ import lombok.experimental.FieldDefaults;
 @RequestMapping("/api/attachments")
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
-@Tag(name = "Auth Management", description = """
-		API này hỗ trợ các chức năng tải lên và lấy thông tin tệp đính kèm của người dùng.
+@Tag (name = "Attachment Management", description = """
+		API này hỗ trợ các chức năng quản lý tệp đính kèm, bao gồm tải lên và lấy danh sách tệp đính kèm của người dùng hiện tại.
+		(Chỉ chấp nhận file media: hình ảnh, video, audio)
+		Xóa tệp sẽ được cập nhật sau
 	""")
+//TODO: sau khi bổ sung thêm chức năng xóa tệp cập nhật lại mô tả
 @SecurityRequirement(name = "bearerAuth")
 public class AttachmentController {
 

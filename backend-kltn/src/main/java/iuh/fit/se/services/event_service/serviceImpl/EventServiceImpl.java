@@ -1,6 +1,9 @@
 package iuh.fit.se.services.event_service.serviceImpl;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
@@ -21,11 +24,14 @@ import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.entity.enumerator.OrganizerRole;
 import iuh.fit.se.entity.id_class.AttendeeId;
 import iuh.fit.se.entity.id_class.EventOrganizerId;
+import iuh.fit.se.errorHandler.NotFoundErrorHandler;
 import iuh.fit.se.repository.GlobalConfigurationRepository;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.enumerator.EventCategory;
 import iuh.fit.se.services.event_service.dto.enumerator.EventSearchType;
 import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.EventOrganizerSingleRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventSearchRequestDto;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import iuh.fit.se.services.event_service.mapper.EventOrganizerMapper;
@@ -68,6 +74,7 @@ public class EventServiceImpl implements EventService {
 
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('MEMBER') or hasRole('LEADER')")
+	@Transactional
 	public EventDetailResponseDto createEvent(EventCreateRequestDto dto) {
 		log.info("Creating event: {}", dto);
 		User currentUser = userService.getCurrentUser();
@@ -83,22 +90,11 @@ public class EventServiceImpl implements EventService {
 		EventDetailResponseDto eventDetailResponseDto = factory
 			.toEventDetailResponseDto(savedEvent);
 
-		Attendee attendee = savedEvent.getAttendeeByUserId(currentUser.getId());
-		eventDetailResponseDto.setUserAttendeeStatus(attendee.getStatus());
+		// Attendee attendee =
+		// savedEvent.getAttendeeByUserId(currentUser.getId());
+		// eventDetailResponseDto.setUserAttendeeStatus(attendee.getStatus());
 
 		return eventDetailResponseDto;
-	}
-
-	private GenerateEventFactory getFactory(EventCreateRequestDto dto) {
-		return switch (dto.category()) {
-			case SEMINAR -> new SeminarFactory(eventMapper);
-			case CONTEST -> new ContestFactory(eventMapper);
-			case TRAINING_EVENT -> new TrainingEventFactory(eventMapper);
-			case CLOSED_CONTEST -> new ContestFactory(eventMapper);
-			// ClosedContestFactory(eventMapper);
-			default -> throw new IllegalArgumentException(
-				"Unsupported event type: " + dto.category());
-		};
 	}
 
 	@Override
@@ -110,14 +106,11 @@ public class EventServiceImpl implements EventService {
 		}
 		Event event = eventRepository
 			.findById(eventId)
-			.orElseThrow(() -> new IllegalArgumentException(
+			.orElseThrow(() -> new NotFoundErrorHandler(
 				"Event with ID " + eventId + " does not exist"));
-		if (event
-			.getLocation()
-			.getStartTime()
-			.isBefore(java.time.LocalDateTime.now())) {
+		if (event.isDone()) {
 			throw new IllegalStateException(
-				"Cannot delete an event that has already started or completed");
+				"Không thể xóa sự kiện đã hoàn thành");
 		}
 		eventRepository.deleteById(eventId);
 		log.info("Deleted event with ID: {}", eventId);
@@ -128,8 +121,6 @@ public class EventServiceImpl implements EventService {
 		Specification<Event> spec = Specification.unrestricted();
 
 		spec = spec.and(EventSpecification.hasStatus(FunctionStatus.ACCEPTED));
-		// spec =
-		// spec.and(EventSpecification.exceptOfType(TrainingEvent.class));
 		spec = spec.and(EventSpecification.isSingle(true));
 		return searchEvents(spec, request);
 	}
@@ -169,14 +160,18 @@ public class EventServiceImpl implements EventService {
 	@PreAuthorize("hasRole('ADMIN') or hasRole('MEMBER') or hasRole('LEADER')")
 	public Page<Event> searchMyEvents(
 		EventSearchRequestDto request,
-		FunctionStatus status
+		FunctionStatus status,
+		String userId
 	) {
 
 		String currentUsername = ContextUtil.getCurrentUsername();
 
 		Specification<Event> spec = Specification.unrestricted();
 
-		spec = spec.and(EventSpecification.hasHostedUsername(currentUsername));
+		spec = spec
+			.and(EventSpecification
+				.hasHostedUsername(currentUsername)
+				.or(EventSpecification.includeOrganizerId(userId)));
 
 		if (status != null) {
 			spec = spec.and(EventSpecification.hasStatus(status));
@@ -189,7 +184,7 @@ public class EventServiceImpl implements EventService {
 	public EventDetailResponseDto getEventById(String eventId) {
 		Event event = eventRepository
 			.findById(eventId)
-			.orElseThrow(() -> new IllegalArgumentException(
+			.orElseThrow(() -> new NotFoundErrorHandler(
 				"Event with ID " + eventId + " does not exist"));
 
 		EventDetailResponseDto dto = eventMapper
@@ -207,7 +202,7 @@ public class EventServiceImpl implements EventService {
 
 		Event event = eventRepository
 			.findByIdAndFetchAttendees(eventId)
-			.orElseThrow(() -> new IllegalArgumentException(
+			.orElseThrow(() -> new NotFoundErrorHandler(
 				"Event with ID " + eventId + " does not exist"));
 
 		EventDetailResponseDto dto = eventMapper
@@ -215,7 +210,7 @@ public class EventServiceImpl implements EventService {
 
 		User user = userRepository
 			.findById(userId)
-			.orElseThrow(() -> new IllegalArgumentException(
+			.orElseThrow(() -> new NotFoundErrorHandler(
 				"User with ID " + userId + " does not exist"));
 
 		log.info("Attendee list: {}", event.getAttendeesMap());
@@ -283,10 +278,26 @@ public class EventServiceImpl implements EventService {
 	public void updateEventStatus(String eventId, FunctionStatus status) {
 		Event event = eventRepository
 			.findById(eventId)
-			.orElseThrow(() -> new IllegalArgumentException(
+			.orElseThrow(() -> new NotFoundErrorHandler(
 				"Event with ID " + eventId + " does not exist"));
-		event.setStatus(status);
 
+		if (event.isDone()) {
+			throw new IllegalStateException(
+				"Cannot change status of an event that is already done");
+		}
+		// if (event.getStatus() != FunctionStatus.PENDING) {
+		// throw new IllegalStateException(
+		// "Can only change status of events that are in PENDING state");
+		// }
+		// if (status != FunctionStatus.ACCEPTED || status !=
+		// FunctionStatus.REJECTED) {
+		//// TODO: chỉnh lại trạng thái được phép chuyển, hiện tại chỉ rằng buộc
+		// 2 trạng thái
+		// throw new IllegalArgumentException(
+		// "Status must be either ACCEPTED or REJECTED");
+		// }
+		event.setStatus(status);
+		eventRepository.save(event);
 	}
 
 	@Override
@@ -295,12 +306,25 @@ public class EventServiceImpl implements EventService {
 	public void triggerEventDone(String eventId) {
 		Event event = eventRepository
 			.findById(eventId)
-			.orElseThrow(() -> new IllegalArgumentException(
+			.orElseThrow(() -> new NotFoundErrorHandler(
 				"Event with ID " + eventId + " does not exist"));
 		GlobalConfiguration config = globalConfigurationRepository
 			.findByConfigKey(GlobalConfiguration.KEY_LAST_RESET_POINT_TIME)
 			.orElseThrow(() -> new IllegalStateException(
 				"Global configuration for last reset point time not found"));
+		if (event.getStatus() != FunctionStatus.ACCEPTED) {
+			throw new IllegalStateException(
+				"Cannot mark an event as done if it is not in ACCEPTED status");
+		}
+		// TODO: chỉnh lại thời gian check done
+		if (event
+			.getLocation()
+			.getStartTime()
+			.isAfter(java.time.LocalDateTime.now())) {
+			throw new IllegalStateException(
+				"Cannot mark an event as done before its start time");
+		}
+
 		if (event.isDone()) {
 			if (event
 				.getDoneTime()
@@ -347,21 +371,19 @@ public class EventServiceImpl implements EventService {
 		// TODO: tạo test case
 		Event event = eventRepository
 			.findById(eventId)
-			.orElseThrow(() -> new IllegalArgumentException(
+			.orElseThrow(() -> new NotFoundErrorHandler(
 				"Event with ID " + eventId + " does not exist"));
 		// Check if the current user is the host or an attendee
 		User currentUser = userService.getCurrentUser();
 		// Check if the user is the host, an organizer, or a leader
-		if (!currentUser.isLeader()
-			&& event.getHost().getId() != currentUser.getId()) {
-			EventOrganizer organizer = event
-				.getOrganizerByUserId(currentUser.getId());
-			if (organizer == null || organizer
-				.getRoles()
-				.contains(iuh.fit.se.entity.enumerator.OrganizerRole.CODE)) {
-				throw new SecurityException(
-					"Only the host, organizers, or leader can generate or view the OTP for this event");
-			}
+		if (!checkEventRole(event, currentUser.getId(), OrganizerRole.CODE)) {
+			throw new SecurityException(
+				"Only the host, organizers with CODE role, or leader can get the event code");
+		}
+		// kiểm tra xem event đã được duyệt chưa
+		if (event.getStatus() != FunctionStatus.ACCEPTED) {
+			throw new IllegalStateException(
+				"Không thể lấy mã code cho sự kiện chưa được duyệt");
 		}
 		if (!checkValidTime(event)) {
 			throw new IllegalStateException(
@@ -381,9 +403,10 @@ public class EventServiceImpl implements EventService {
 		if (eventCodeService.verifyEventCode(eventId, code)) {
 			Event event = eventRepository
 				.findById(eventId)
-				.orElseThrow(() -> new IllegalArgumentException(
+				.orElseThrow(() -> new NotFoundErrorHandler(
 					"Event with ID " + eventId + " does not exist"));
-			checkInEvent(event, userId);
+			Attendee a = checkInEventWithoutSaving(event, userId);
+			eventAttendeeRepository.save(a);
 		} else {
 			throw new IllegalArgumentException(
 				"Invalid code for event " + eventId);
@@ -392,40 +415,50 @@ public class EventServiceImpl implements EventService {
 
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
-	public void manualCheckInEvent(String eventId,List<String> attendeeIds) {
-		String currentUserId = userService.getCurrentUser().getId(); 
+	public void manualCheckInEvent(String eventId, List<String> attendeeIds) {
+		String currentUserId = userService.getCurrentUser().getId();
 		Event event = eventRepository
 			.findById(eventId)
-			.orElseThrow(() -> new IllegalArgumentException(
+			.orElseThrow(() -> new NotFoundErrorHandler(
 				"Event with ID " + eventId + " does not exist"));
 		if (!checkEventRole(event, currentUserId, OrganizerRole.CHECK_IN)) {
 			throw new SecurityException(
 				"Only the host, organizers with CHECKIN role, or leader can manually check-in for this event");
 		}
+		List<Attendee> successfulCheckIns = new ArrayList<>();
 		for (String attendeeId : attendeeIds) {
 			try {
-	            checkInEvent(event, attendeeId);
-	        } catch (Exception e) {
-	            log.error("Check-in failed for {}: {}", attendeeId, e.getMessage());
-	            // Continue với attendee tiếp theo
-	        }
+				successfulCheckIns
+					.add(checkInEventWithoutSaving(event, attendeeId));
+			} catch (Exception e) {
+				log
+					.error("Check-in failed for {}: {}", attendeeId,
+						e.getMessage());
+				// Continue với attendee tiếp theo
+			}
 		}
-		
-//		eventRepository.save(event);
+		eventAttendeeRepository.saveAll(successfulCheckIns);
+		// eventRepository.save(event);
 	}
-	
 
 	@Override
 	@PreAuthorize("hasRole('MEMBER') or hasRole('ADMIN') or hasRole('LEADER')")
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void checkInEvent(Event event, String userId) {
+	public Attendee checkInEventWithoutSaving(Event event, String userId) {
 
 		if (!checkValidTime(event)) {
 			throw new IllegalStateException(
 				"Không thể check-in ngoài thời gian diễn ra sự kiện");
 		}
-		event.checkIn(userId);
-		eventRepository.save(event);
+		Attendee attendee = eventAttendeeRepository
+			.findByEventIdAndUserId(event.getId(), userId)
+			.orElseThrow(() -> {
+				throw new IllegalArgumentException("User with ID " + userId
+					+ " is not registered for event " + event.getId());
+			});
+		attendee.checkIn();
+		return attendee;
+		// eventAttendeeRepository.save(attendee);
 	}
 
 	private boolean checkValidTime(Event event) {
@@ -433,7 +466,6 @@ public class EventServiceImpl implements EventService {
 		return now.isAfter(event.getLocation().getStartTime())
 			&& now.isBefore(event.getLocation().getEndTime());
 	}
-	
 
 	@Override
 	@Transactional
@@ -443,13 +475,14 @@ public class EventServiceImpl implements EventService {
 			throw new IllegalStateException(
 				"Cannot register for training events directly");
 		}
-		
+
 		AttendeeId attendeeId = AttendeeId
 			.builder()
 			.userId(userId)
 			.eventId(event.getId())
 			.build();
-//		kiểm tra nếu đã đăng ký rồi thì bỏ đăng ký
+		log.info("Trigger register event for user ID: {}", userId);
+		// kiểm tra nếu đã đăng ký rồi thì bỏ đăng ký
 		if (eventAttendeeRepository.existsById(attendeeId)) {
 			Attendee attendee = eventAttendeeRepository
 				.findById(attendeeId)
@@ -473,7 +506,7 @@ public class EventServiceImpl implements EventService {
 			}
 
 		} else {
-//			thêm mới
+			// thêm mới
 			event
 				.addAttendee(Attendee
 					.builder()
@@ -489,7 +522,7 @@ public class EventServiceImpl implements EventService {
 		String currentUserId = userService.getCurrentUser().getId();
 		Event event = eventRepository
 			.findById(eventId)
-			.orElseThrow(() -> new IllegalArgumentException(
+			.orElseThrow(() -> new NotFoundErrorHandler(
 				"Event with ID " + eventId + " does not exist"));
 		if (event instanceof Contest) {
 			Contest contest = (Contest) event;
@@ -505,39 +538,248 @@ public class EventServiceImpl implements EventService {
 	@Override
 	@Transactional
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
-	public void manualTriggerRegisterEvent(String eventId, List<String> attendeesIds) {
+	public void manualTriggerRegisterEvent(
+		String eventId,
+		List<String> attendeesIds
+	) {
 		String currentUserId = userService.getCurrentUser().getId();
 		Event event = eventRepository
 			.findById(eventId)
-			.orElseThrow(() -> new IllegalArgumentException(
+			.orElseThrow(() -> new NotFoundErrorHandler(
 				"Event with ID " + eventId + " does not exist"));
 		if (!checkEventRole(event, currentUserId, OrganizerRole.REGISTER)) {
 			throw new SecurityException(
 				"Only the host, organizers with REGISTER role, or leader can manually register for this event");
 		}
-		attendeesIds.forEach(attendeeId -> 
-			triggerRegisterEvent(event, attendeeId)
-		);
+		attendeesIds
+			.forEach(attendeeId -> triggerRegisterEvent(event, attendeeId));
 	}
 
-	
-//	hàm này để rút gọn các đoạn kiểm tra role của user hiện tại
-	private boolean checkEventRole(Event event, String userId, OrganizerRole role) {
-		if (event.getHost().getId() != userId && !ContextUtil.isLeader()) {
+	@Override
+	@Transactional
+	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
+	public Event updateEventOrganizers(
+		String eventId,
+		List<EventOrganizerSingleRequestDto> organizerRequests
+	) {
+		// kiểm tra trong list chỉ được có 1 id
+		Set<String> ids = new HashSet<>();
+		organizerRequests.forEach(req -> {
+			if (!ids.add(req.organizerId())) {
+				throw new IllegalArgumentException(
+					"Duplicate organizer ID in request: " + req.organizerId());
+			}
+		});
+		User currentUser = userService.getCurrentUser();
+		Event event = eventRepository
+			.findByIdAndFetchOrganizers(eventId)
+			.orElseThrow(() -> new IllegalArgumentException(
+				"Event with ID " + eventId + " does not exist"));
+
+		if (!checkEventRole(event, currentUser.getId(), null)) {
+			throw new SecurityException(
+				"Only the host, organizers, or leader can update organizers for this event");
+		}
+
+		for (EventOrganizerSingleRequestDto req : organizerRequests) {
+			if (req.removed()) {
+				// Remove organizer
+				EventOrganizerId eoId = EventOrganizerId
+					.builder()
+					.eventId(eventId)
+					.organizerId(req.organizerId())
+					.build();
+				if (eventOrganizerRepository.existsById(eoId)) {
+					event
+						.removeOrganizer(
+							eventOrganizerRepository.getReferenceById(eoId));
+				} else {
+					throw new IllegalArgumentException(
+						"Organizer with ID " + req.organizerId()
+							+ " is not associated with event " + eventId);
+				}
+			} else {
+				// Add or update organizer
+				User organizerUser = userRepository
+					.findById(req.organizerId())
+					.orElseThrow(
+						() -> new IllegalArgumentException("User with ID "
+							+ req.organizerId() + " does not exist"));
+				if (!organizerUser.isMember()) {
+					throw new IllegalArgumentException(
+						"User with ID " + req.organizerId()
+							+ " is not a member and cannot be an organizer");
+				}
+				EventOrganizer organizer = event
+					.getOrganizerByUserId(req.organizerId());
+				if (organizer == null) {
+					// Add new organizer
+					organizer = EventOrganizer
+						.builder()
+						.organizerId(organizerUser.getId())
+						.eventId(event.getId())
+						.event(event)
+						.organizer(organizerUser)
+						.roles(req.roles() != null
+							? new HashSet<>(req.roles())
+							: new HashSet<>())
+						.roleContent(req.roleContent())
+						.build();
+					event.addOrganizer(organizer);
+				} else {
+					// Update existing organizer
+					if (req.roleContent() != null) {
+						organizer.setRoleContent(req.roleContent());
+					}
+					if (req.roles() != null) {
+						organizer.setRoles(new HashSet<>(req.roles()));
+					}
+				}
+			}
+		}
+		return eventRepository.save(event);
+
+	}
+
+	// hàm này để rút gọn các đoạn kiểm tra role của user hiện tại
+	private boolean checkEventRole(
+		Event event,
+		String userId,
+		OrganizerRole role
+	) {
+		log
+			.info("current user id: {}, host id: {}", userId,
+				event.getHost().getId());
+		if (!event.getHost().getId().equalsIgnoreCase(userId)
+			&& !ContextUtil.isLeader()) {
+			// Check if the user is an organizer with the required role
+
 			EventOrganizer organizer = eventOrganizerRepository
 				.findById(EventOrganizerId
 					.builder()
 					.organizerId(userId)
 					.eventId(event.getId())
 					.build())
-				.orElseThrow(
-					() -> new SecurityException("Organizer with user ID "
-						+ userId + " is not associated with event " + event.getId()));
-			if (!organizer
-				.getRoles()
-				.contains(role)) return false;
-			
+				.orElseThrow(() -> new SecurityException(
+					"Organizer with user ID " + userId
+						+ " is not associated with event " + event.getId()));
+			if (!organizer.getRoles().contains(role))
+				return false;
+
 		}
 		return true;
 	}
+
+	@Override
+	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
+	public List<EventOrganizer> getEventOrganizers(String eventId) {
+
+		Event event = eventRepository
+			.findById(eventId)
+			.orElseThrow(() -> new IllegalArgumentException(
+				"Event with ID " + eventId + " does not exist"));
+		if (!event
+			.getHost()
+			.getUsername()
+			.equalsIgnoreCase(ContextUtil.getCurrentUsername())
+			&& !ContextUtil.isLeader()) {
+			throw new SecurityException(
+				"Only the host, organizers, or leader can view organizers for this event");
+		}
+
+		return eventOrganizerRepository.findByEventId(eventId);
+	}
+
+	@Override
+	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
+	@Transactional
+	public void triggerBan(
+		String eventId,
+		List<String> attendeesId,
+		String currentUserId
+	) {
+
+		Event event = eventRepository
+			.findById(eventId)
+			.orElseThrow(() -> new IllegalArgumentException(
+				"Event with ID " + eventId + " does not exist"));
+		if (checkEventRole(event, currentUserId, OrganizerRole.BAN) == false) {
+			throw new SecurityException(
+				"Only the host, organizers with BAN role, or leader can ban attendees for this event");
+		}
+		if (event.isDone()) {
+			throw new IllegalStateException(
+				"Cannot trigger ban attendees from an event that has already been completed");
+		}
+		List<Attendee> attendees = new ArrayList<>();
+
+		attendeesId.forEach(attendeeId -> {
+			Attendee attendee = eventAttendeeRepository
+				.findById(AttendeeId
+					.builder()
+					.eventId(eventId)
+					.userId(attendeeId)
+					.build())
+				.orElseThrow(() -> new IllegalArgumentException(
+					"Attendee with ID " + attendeeId
+						+ " is not registered for event " + eventId));
+
+			if (attendee.getStatus() == AttendeeStatus.BANNED) {
+				attendee.setStatus(AttendeeStatus.REGISTERED);
+			} else {
+				attendee.setStatus(AttendeeStatus.BANNED);
+			}
+			attendees.add(attendee);
+		});
+		eventAttendeeRepository.saveAll(attendees);
+	}
+
+	@Override
+	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
+	public EventDetailResponseDto updateSingleEvent(
+		String eventId,
+		EventUpdateRequestDto dto,
+		String currentUserId
+	) {
+
+		Event event = eventRepository
+			.findById(eventId)
+			.orElseThrow(() -> new NotFoundErrorHandler(
+				"Event with ID " + eventId + " does not exist"));
+		if (!checkEventRole(event, currentUserId, OrganizerRole.MODIFY)) {
+			throw new SecurityException(
+				"Only the host, organizers with MODIFY role, or leader can modify this event");
+		}
+		GenerateEventFactory factory = getFactory(event);
+
+		return factory
+			.toEventDetailResponseDto(factory.updateEvent(event, dto));
+	}
+
+	private GenerateEventFactory getFactory(EventCreateRequestDto dto) {
+		return switch (dto.category()) {
+			case SEMINAR -> new SeminarFactory(eventMapper);
+			case CONTEST -> new ContestFactory(eventMapper);
+			case TRAINING_EVENT -> new TrainingEventFactory(eventMapper);
+			case CLOSED_CONTEST -> new ContestFactory(eventMapper);
+			// ClosedContestFactory(eventMapper);
+			default -> throw new IllegalArgumentException(
+				"Unsupported event type: " + dto.category());
+		};
+	}
+
+	private GenerateEventFactory getFactory(Event event) {
+		if (event instanceof Seminar) {
+			return new SeminarFactory(eventMapper);
+		} else if (event instanceof Contest) {
+			if (((Contest) event).isAbleToRegister() == false) {
+				// return new ClosedContestFactory(eventMapper);
+				return new ContestFactory(eventMapper);
+			}
+			return new ContestFactory(eventMapper);
+		} else {
+			return new TrainingEventFactory(eventMapper);
+		}
+	}
+
 }

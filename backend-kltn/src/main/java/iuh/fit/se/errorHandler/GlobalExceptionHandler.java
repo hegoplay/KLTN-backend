@@ -124,15 +124,16 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.of(problemDetail).build();
 	}
 	
-	@ExceptionHandler(InputNotFoundException.class)
-	protected ResponseEntity<ProblemDetail> handleBadRequestException(
-		InputNotFoundException ex,
+	
+	@ExceptionHandler(NotFoundErrorHandler.class)
+	protected ResponseEntity<ProblemDetail> handleNotFoundException(
+		NotFoundErrorHandler ex,
 		HttpServletRequest request
 	) {
 		ProblemDetail problemDetail = ProblemDetail
-			.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
-		problemDetail.setTitle("Input Not Found");
-		log.error("Input Error: {}", ex.getMessage());
+			.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+		problemDetail.setTitle("Not Found");
+		log.error("Data not Found: {}", ex.getMessage());
 		return ResponseEntity.of(problemDetail).build();
 	}
 

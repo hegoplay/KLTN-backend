@@ -1,5 +1,8 @@
 package iuh.fit.se.entity.enumerator;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Trạng thái của chức năng như event hoặc training")
 public enum FunctionStatus {
 	PENDING,
 	ARCHIVED,

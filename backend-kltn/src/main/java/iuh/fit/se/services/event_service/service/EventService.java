@@ -4,10 +4,14 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
+import iuh.fit.se.entity.Attendee;
 import iuh.fit.se.entity.Event;
+import iuh.fit.se.entity.EventOrganizer;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.EventOrganizerSingleRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventSearchRequestDto;
 
 public interface EventService {
@@ -30,7 +34,8 @@ public interface EventService {
 
 	Page<Event> searchMyEvents(
 		EventSearchRequestDto request,
-		FunctionStatus status
+		FunctionStatus status,
+		String userId
 	);
 
 	EventDetailResponseDto getEventById(String eventId);
@@ -53,6 +58,13 @@ public interface EventService {
 
 	void manualCheckInEvent(String eventId, List<String> attendeeIds);
 
-	void checkInEvent(Event event, String userId);
+	Attendee checkInEventWithoutSaving(Event event, String userId);
 	
+	Event updateEventOrganizers(String eventId, List<EventOrganizerSingleRequestDto> organizerRequests);
+	
+	List<EventOrganizer> getEventOrganizers(String eventId);
+	
+	void triggerBan(String eventId, List<String> attendeesId, String currentUserId);
+	
+	EventDetailResponseDto updateSingleEvent(String eventId, EventUpdateRequestDto dto, String currentUserId);
 }

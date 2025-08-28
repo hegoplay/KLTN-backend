@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.entity.Event;
+import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.EventWrapperDto;
 import iuh.fit.se.services.event_service.dto.enumerator.EventSearchType;
@@ -33,60 +35,85 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @Slf4j
-@Tag(
-	name = "Event Public Management",
-	description = """
-		API này hỗ trợ các công việc liên quan đến sự kiện mà không cần xác thực.
-		"""
-)
+@Tag(name = "Event Public Management", description = """
+	API này hỗ trợ các công việc liên quan đến sự kiện mà không cần xác thực.
+	""")
 public class EventPublicController {
-	
+
 	PagedResourcesAssembler<EventWrapperDto> pagedResourcesAssembler;
 	EventService eventService;
 	EventMapper eventMapper;
 	JwtTokenUtil jwtTokenUtil;
-	
+
+	@Operation(
+		summary = "Tìm kiếm các sự kiện ACCEPTED",
+		description = """
+			API này cho phép tìm kiếm tất cả sự kiện với các tiêu chí lọc như từ khóa, loại sự kiện,
+			Kết quả trả về là danh sách các sự kiện ở trạng thái ACCEPTED và được nhúng vào trong _embedded
+			Mỗi EventWrapperDto chứa thông tin tóm tắt về sự kiện.
+			""")
 	@GetMapping("/search")
-    public ResponseEntity<PagedModel<EntityModel<EventWrapperDto>>> searchEvents(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false, defaultValue = "ALL") EventSearchType eventType,
-            @RequestParam(required = false) Boolean isDone,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "location.startTime,asc") String sort) {
-        EventSearchRequestDto request = new EventSearchRequestDto(
-            keyword, eventType, isDone, page, size, PageableUtil.parseSort(sort)
-        );
+	public ResponseEntity<PagedModel<EntityModel<EventWrapperDto>>> searchEvents(
+		@Schema(
+			description = "Từ khóa tìm kiếm trong tiêu đề hoặc mô tả sự kiện",
+			example = "Java")
+		@RequestParam(required = false) String keyword,
+		@Schema(
+			description = "Loại sự kiện để lọc kết quả",
+			example = "SEMINAR",
+			requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+			implementation = EventSearchType.class)
+		@RequestParam(
+			required = false,
+			defaultValue = "ALL") EventSearchType eventType,
+		@Schema(
+			description = "Kiểm tra sự kiện đã hoàn thành hay chưa",
+			example = "false",
+			requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+		@RequestParam(required = false) Boolean isDone,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "10") int size,
+		@Schema(description = """
+			Các trường sắp xếp theo định dạng: "field,asc|desc".
+			Mặc định là "location.startTime,asc".
+			""", example = "location.startTime,asc")
+		@RequestParam(defaultValue = "location.startTime,asc") String sort
+	) {
+		EventSearchRequestDto request = new EventSearchRequestDto(keyword,
+			eventType, isDone, page, size, PageableUtil.parseSort(sort));
 
-        Page<Event> events = eventService.searchPublicEvents(request);
-        return ResponseEntity.ok(pagedResourcesAssembler
-			.toModel(events.map(eventMapper::toEventWrapperDto)));
-    }
+		Page<Event> events = eventService.searchPublicEvents(request);
+		return ResponseEntity
+			.ok(pagedResourcesAssembler
+				.toModel(events.map(eventMapper::toEventWrapperDto)));
+	}
 
+	@Operation(
+		summary = "Lấy chi tiết sự kiện công khai theo ID",
+		description = """
+			API này cho phép lấy chi tiết của một sự kiện công khai dựa trên ID của nó.
+			Nếu có token hợp lệ trong header Authorization, API sẽ trả về thông tin chi tiết
+			của sự kiện cùng với trạng thái tham gia của user (nếu user đã đăng ký tham gia sự kiện).
+			Nếu không có token hoặc token không hợp lệ, API chỉ trả về thông tin chi tiết của sự kiện.
+			Lưu ý: Chỉ các sự kiện ở trạng thái ACCEPTED mới được xem là công khai và có thể truy cập qua API này.
+			Nếu sự kiện không ở trạng thái này, API sẽ trả về lỗi.
+			""")
 	@GetMapping("/{eventId}")
-	@SecurityRequirement(name = "bearerAuth")
 	public ResponseEntity<EventDetailResponseDto> getEventById(
 		@PathVariable String eventId,
 		HttpServletRequest request
 	) {
-//		java.util.Enumeration<String> headerNames = request.getHeaderNames();
-//	    while (headerNames.hasMoreElements()) {
-//	        String headerName = headerNames.nextElement();
-//	        log.info("Header: {} = {}", headerName, request.getHeader(headerName));
-//	    }
 		String tokenFromRequest = jwtTokenUtil.getTokenFromRequest(request);
-		if (tokenFromRequest==null) {
-			EventDetailResponseDto event = eventService.getEventById(eventId);
-			return ResponseEntity.ok(event);
-			
+		EventDetailResponseDto event;
+		if (tokenFromRequest == null) {
+			event = eventService.getEventById(eventId);
+		} else {
+			String userId = jwtTokenUtil.getUserIdFromToken(tokenFromRequest);
+			event = eventService.getEventByIdAndUserId(eventId, userId);
 		}
-		log.info("Token from request: {}", tokenFromRequest);
-		String userId = jwtTokenUtil.getUserIdFromToken(tokenFromRequest);
-		EventDetailResponseDto event = eventService.getEventByIdAndUserId(eventId, userId);
-		
+		if (event.getStatus() != FunctionStatus.ACCEPTED)
+			throw new RuntimeException("Event is not public");
 		return ResponseEntity.ok(event);
 	}
-	
-	
-	
+
 }

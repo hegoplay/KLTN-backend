@@ -28,6 +28,8 @@ public interface EventRepository
 	@Query("SELECT e FROM Event e WHERE e.id = :id")
 	Optional<Event> findByIdAndFetchAttendees(@Param("id") String id);
 	
-	
+	@EntityGraph(attributePaths = {"organizers"})
+	@Query("SELECT e FROM Event e WHERE e.id = :id")
+	Optional<Event> findByIdAndFetchOrganizers(@Param("id") String id);
 	
 }

@@ -106,7 +106,7 @@ public class InitConfig {
 					.password(passwordEncoder.encode("password"))
 					.email("user" + i + "@example.com")
 					.fullName("User " + i)
-					.role(UserRole.NONE)
+					.role((i & 1) == 1 ? UserRole.MEMBER : UserRole.NONE)
 					.dateOfBirth(LocalDate.of(2000, 1, 1))
 					.disabled(false)
 					.build();

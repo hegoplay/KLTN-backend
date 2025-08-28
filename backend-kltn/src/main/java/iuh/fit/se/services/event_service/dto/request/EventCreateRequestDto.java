@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+@Schema(description = "DTO dùng để tạo mới sự kiện")
 public record EventCreateRequestDto(
 	@Schema(
 		description = "Tiêu đề sự kiện",
@@ -24,6 +25,10 @@ public record EventCreateRequestDto(
 	@NotBlank(message = "Nội dung không được để trống") String content,
 
 	@NotNull(message = "Địa điểm tổ chức không được null") LocationDto location,
+	@Schema(
+		description = "Hệ số nhân điểm cho sự kiện (ít nhất là 1)",
+		example = "1",
+		requiredMode = RequiredMode.REQUIRED)
 	@Min(1) Integer multiple,
 	@Schema(
 		description = "Trạng thái lúc khởi tạo sự kiện (Chỉ được là PENDING hoặc ARCHIVED)",
@@ -31,6 +36,9 @@ public record EventCreateRequestDto(
 		requiredMode = RequiredMode.REQUIRED) FunctionStatus status,
 	@NotNull(
 		message = "Danh sách người tổ chức không được để trống") List<EventRequestOrganizerDto> organizers,
+	@Schema(
+		description = "ID của sự kiện đào tạo liên quan, nếu có",
+		example = "TRN-2024-001")
 	String trainingId, // phục vụ cho training event
 	@Schema(description = "Loại sự kiện", defaultValue = "SEMINAR")
 	@NotNull(

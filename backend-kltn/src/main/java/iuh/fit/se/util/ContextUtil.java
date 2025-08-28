@@ -14,10 +14,10 @@ public class ContextUtil {
 	}
 	public static boolean isMember() {
 		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
-				.anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_MEMBER"));
+				.anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_MEMBER")) || isLeader() || isAdmin();
 	}
 	public static boolean isLeader() {
 		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
-				.anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_LEADER"));
+				.anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_LEADER")) || isAdmin();
 	}
 }

@@ -1,9 +1,12 @@
 package iuh.fit.se.services.event_service.patterns.factoryPattern;
 
 import iuh.fit.se.entity.Event;
+import iuh.fit.se.entity.Seminar;
+import iuh.fit.se.entity.Training;
 import iuh.fit.se.entity.TrainingEvent;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -28,6 +31,13 @@ public class TrainingEventFactory extends GenerateEventFactory {
 			.setCategory(
 				iuh.fit.se.services.event_service.dto.enumerator.EventCategory.TRAINING_EVENT);
 		return dto;
+	}
+
+	@Override
+	protected Event handleUpdateEvent(Event e, EventUpdateRequestDto dto) {
+		TrainingEvent training = (TrainingEvent) e;
+		eventMapper.updateEventFromDto(dto, training);
+		return training;
 	}
 
 }

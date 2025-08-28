@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.entity.Event;
@@ -36,85 +37,130 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @Slf4j
 @Tag(
-	name = "Event Admin Management",
+	name = "Event Leaders Management",
 	description = """
-		API này hỗ trợ các công việc quản lý sự kiện của leader.
-		"""
-)
+		API này hỗ trợ các công việc quản lý sự kiện của leader. API chỉ cho phép truy cập khi user là leader trở lên
+		""")
 @SecurityRequirement(name = "bearerAuth")
 public class EventLeaderController {
 
-//	duyệt sự kiện
+	// duyệt sự kiện
 	EventService eventService;
 	PagedResourcesAssembler<EventWrapperDto> pagedResourcesAssembler;
 	EventMapper eventMapper;
-	
+
+	@Operation(
+		summary = "Tìm kiếm tất cả sự kiện",
+		description = """
+			API này cho phép tìm kiếm tất cả sự kiện với các tiêu chí lọc như từ khóa, loại sự kiện,
+			Ý nghĩa của các tham số:
+			- keyword: Từ khóa để tìm kiếm trong tiêu đề hoặc mô tả sự kiện.
+			- eventType: Loại sự kiện để lọc kết quả (ví dụ: SEMINAR, WORKSHOP, MEETING, ALL).
+			- isDone: Lọc sự kiện đã hoàn thành (true) hoặc chưa hoàn thành (false).
+			- page: Số trang (bắt đầu từ 0) để phân trang kết quả.
+			- size: Số lượng sự kiện trên mỗi trang.
+			- sort: Tiêu chí sắp xếp kết quả (ví dụ: location.startTime,asc).
+			- status: Trạng thái của sự kiện (PENDING, ARCHIVED, ACCEPTED, REJECTED, DISABLED).
+			""")
+
 	@GetMapping("/search")
-    public ResponseEntity<PagedModel<EntityModel<EventWrapperDto>>> searchEvents(
-    	@RequestParam(required = false) String keyword,
+	public ResponseEntity<PagedModel<EntityModel<EventWrapperDto>>> searchEvents(
+		@RequestParam(required = false) String keyword,
 		@RequestParam(
 			required = false,
-			defaultValue = "ALL"
-		) EventSearchType eventType,
+			defaultValue = "ALL") EventSearchType eventType,
 		@RequestParam(required = false) Boolean isDone,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
 		@RequestParam(defaultValue = "location.startTime,asc") String sort,
-		@RequestParam FunctionStatus status) {
-        EventSearchRequestDto request = new EventSearchRequestDto(
-            keyword, eventType, isDone, page, size, PageableUtil.parseSort(sort)
-        );
+		@RequestParam FunctionStatus status
+	) {
+		EventSearchRequestDto request = new EventSearchRequestDto(keyword,
+			eventType, isDone, page, size, PageableUtil.parseSort(sort));
 
-        Page<Event> events = eventService.searchAllEvents(request,status);
-        return ResponseEntity.ok(pagedResourcesAssembler
-			.toModel(events.map(eventMapper::toEventWrapperDto)));
-    }
-	
+		Page<Event> events = eventService.searchAllEvents(request, status);
+		return ResponseEntity
+			.ok(pagedResourcesAssembler
+				.toModel(events.map(eventMapper::toEventWrapperDto)));
+	}
+
+	@Operation(
+		summary = "Tìm kiếm sự kiện của user",
+		description = """
+			API này cho phép tìm kiếm sự kiện của user với các tiêu chí lọc như từ khóa, loại sự kiện,
+			Ý nghĩa của các tham số:
+			- userId: Mã định danh của user.
+			- keyword: Từ khóa để tìm kiếm trong tiêu đề hoặc mô tả sự kiện.
+			- eventType: Loại sự kiện để lọc kết quả (ví dụ: SEMINAR, WORKSHOP, MEETING, ALL).
+			- isDone: Lọc sự kiện đã hoàn thành (true) hoặc chưa hoàn thành (false).
+			- page: Số trang (bắt đầu từ 0) để phân trang kết quả.
+			- size: Số lượng sự kiện trên mỗi trang.
+			- sort: Tiêu chí sắp xếp kết quả (ví dụ: location.startTime,asc).
+			- status: Trạng thái của sự kiện (PENDING, ARCHIVED, ACCEPTED, REJECTED, DISABLED).
+			""")
 	@GetMapping("/user/{userId}/search")
 	public ResponseEntity<PagedModel<EntityModel<EventWrapperDto>>> getEventsByUser(
 		@PathVariable String userId,
 		@RequestParam(required = false) String keyword,
 		@RequestParam(
 			required = false,
-			defaultValue = "ALL"
-		) EventSearchType eventType,
+			defaultValue = "ALL") EventSearchType eventType,
 		@RequestParam(required = false) Boolean isDone,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
 		@RequestParam(defaultValue = "location.startTime,asc") String sort,
-		@RequestParam FunctionStatus status) {
-		EventSearchRequestDto request = new EventSearchRequestDto(
-			keyword, eventType, isDone, page, size, PageableUtil.parseSort(sort)
-		);
-
-		Page<Event> events = eventService.searchUserEvents(request, null,status);
-		return ResponseEntity.ok(pagedResourcesAssembler
-			.toModel(events.map(eventMapper::toEventWrapperDto)));
-	}
-	
-	@DeleteMapping("/{eventId}")
-	public ResponseEntity<Void> deleteEvent(
-		@PathVariable String eventId
+		@RequestParam FunctionStatus status
 	) {
+		EventSearchRequestDto request = new EventSearchRequestDto(keyword,
+			eventType, isDone, page, size, PageableUtil.parseSort(sort));
+
+		Page<Event> events = eventService
+			.searchUserEvents(request, null, status);
+		return ResponseEntity
+			.ok(pagedResourcesAssembler
+				.toModel(events.map(eventMapper::toEventWrapperDto)));
+	}
+
+	@Operation(summary = "Xoá sự kiện", description = """
+		API này cho phép xoá sự kiện theo eventId.
+		""")
+	@DeleteMapping("/{eventId}")
+	public ResponseEntity<Void> deleteEvent(@PathVariable String eventId) {
 		eventService.deleteEvent(eventId);
 		return ResponseEntity.noContent().build();
 	}
-	
+
+	@Operation(
+		summary = "Kích hoạt sự kiện đã hoàn thành",
+		description = """
+			API này cho phép kích hoạt sự kiện đã hoàn thành theo eventId.
+			Nếu sự kiện đã hoàn thành, nó sẽ được đánh dấu là chưa hoàn thành.
+			Sự kiện được phép kích hoạt khi nó đã ở trạng thái ACCEPTED và đã trong trạng thái kết thúc.
+			(Debug: Hiện tại chỉ kiểm tra thời gian sau ngày bắt đầu)
+			""")
 	@PatchMapping("/{eventId}/trigger-done")
-	public ResponseEntity<Void> triggerEventDone(
-		@PathVariable String eventId
-	) {
-		eventService.triggerEventDone(eventId); 
+	public ResponseEntity<Void> triggerEventDone(@PathVariable String eventId) {
+		eventService.triggerEventDone(eventId);
 		return ResponseEntity.accepted().build();
 	}
-	
+
+	@Operation(
+		summary = "Cập nhật trạng thái sự kiện",
+		description = """
+			API này cho phép cập nhật trạng thái của sự kiện theo eventId.
+			Ý nghĩa của các tham số:
+			- eventId: Mã định danh của sự kiện cần cập nhật.
+			- request: Đối tượng chứa trạng thái mới của sự kiện.
+			Các trạng thái hợp lệ bao gồm: PENDING, ARCHIVED, ACCEPTED, REJECTED, DISABLED.
+			Chỉ được phép cập nhật khi sự kiện chưa hoàn thành (done = false).
+			""")
 	@PatchMapping("/{eventId}/status")
 	public ResponseEntity<Void> updateEventStatus(
 		@RequestParam String eventId,
 		@RequestBody EventStatusUpdateRequestDto request
 	) {
-		eventService.updateEventStatus(eventId,request.status());
+		eventService.updateEventStatus(eventId, request.status());
 		return ResponseEntity.accepted().build();
 	}
-	
+
 }
