@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.stream.IntStream;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,14 +28,14 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 @Configuration
-@Profile("!prod")
 @RequiredArgsConstructor
-@FieldDefaults(makeFinal = true, level = lombok.AccessLevel.PRIVATE)
 @Slf4j
-public class InitConfig {
+@Profile("prod")
+public class InitProdConfig {
 	
-	
-	PasswordEncoder passwordEncoder;
+	@Value("${aws.region}")
+	private String awsRegion;
+	private final PasswordEncoder passwordEncoder;
 
 	@Bean
 	@Transactional
@@ -44,6 +45,7 @@ public class InitConfig {
 		GlobalConfigurationRepository globalConfigurationRepo
 	) {
 		return args -> {
+			log.info("AWS Region: {}", awsRegion);
 			// Kiểm tra xem user demo đã tồn tại chưa
 			if (userRepository.findByUsername("admin").isEmpty()) {
 				User demoUser = User

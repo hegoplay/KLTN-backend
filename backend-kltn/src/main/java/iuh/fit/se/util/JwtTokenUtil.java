@@ -9,15 +9,20 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import iuh.fit.se.entity.User;
+import iuh.fit.se.entity.enumerator.UserRole;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 @Component
+@lombok.NoArgsConstructor
 public class JwtTokenUtil {
 
 	@Value("${jwt.secret}")
@@ -27,7 +32,7 @@ public class JwtTokenUtil {
 	private int jwtExpirationMs;
 
 	private Key secretKey;
-
+	
 	@PostConstruct
 	public void init() {
 		// Khởi tạo secretKey từ jwtSecret
@@ -143,4 +148,7 @@ public class JwtTokenUtil {
 	public String getUserIdFromRequest(HttpServletRequest request) {
 		return getUserIdFromToken(getTokenFromRequest(request));
 	}
+	
+
+	
 }

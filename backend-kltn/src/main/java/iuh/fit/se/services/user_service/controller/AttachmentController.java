@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -96,5 +97,15 @@ public class AttachmentController {
 			.toList();
 
 		return ResponseEntity.ok(new ListAttachmentDtoResponse(attachments));
+	}
+	
+	@DeleteMapping("/{attachmentId}")
+	public ResponseEntity<Void> deleteAttachment(
+		@Parameter(description = "ID của tệp đính kèm cần xóa", required = true)
+		String attachmentId,
+		HttpServletRequest request
+	) {
+		attachmentService.deleteMyAttachment(attachmentId);
+		return ResponseEntity.noContent().build();
 	}
 }

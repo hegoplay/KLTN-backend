@@ -16,5 +16,15 @@ public enum UserRole {
 		return value;
 	}
 	
+	public boolean isMemberOrHigher() {
+		return this.value >= MEMBER.value;
+	}
 	
+	public boolean isLeaderOrHigher() {
+		return this.value >= LEADER.value;
+	}
+	
+	public boolean isAdmin() {
+		return this == ADMIN;
+	}
 }

@@ -1,9 +1,14 @@
 package iuh.fit.se.entity;
 
+import org.hibernate.validator.constraints.URL;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PreRemove;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,6 +25,8 @@ import lombok.experimental.FieldDefaults;
 public class Attachment {
 	@Id
 	String name;
+	
+	@URL(message = "Invalid URL format")
 	String url;
 	String fileType;
 	long size;
@@ -28,4 +35,5 @@ public class Attachment {
 	@ManyToOne
 	@JoinColumn(name = "user_id")
 	User user;
+	
 }

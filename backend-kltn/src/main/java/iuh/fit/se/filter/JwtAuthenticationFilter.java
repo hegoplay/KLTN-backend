@@ -17,8 +17,11 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import iuh.fit.se.entity.enumerator.UserRole;
 import iuh.fit.se.services.user_service.serviceImpl.TokenBlacklistService;
+import iuh.fit.se.util.ContextUtil;
 import iuh.fit.se.util.JwtTokenUtil;
+import iuh.fit.se.util.TokenContextUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,8 +37,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	@Value("${jwt.secret}")
 	private String secretKey;
 
-	private final JwtTokenUtil jwtTokenUtil;
 	private final TokenBlacklistService tokenBlacklistService;
+	private final TokenContextUtil tokenContextUtil;
 
 	@Override
 	protected void doFilterInternal(
@@ -43,6 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		HttpServletResponse response,
 		FilterChain filterChain
 	) throws ServletException, IOException {
+		
 		String authorizationHeader = request.getHeader("Authorization");
 		String token = null;
 		String username = null;
@@ -73,6 +77,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				List<SimpleGrantedAuthority> list = List
 					.of(new SimpleGrantedAuthority(
 						claims.get("roles", String.class)));
+				String role = claims.get("roles", String.class);
+				role = role.replace("ROLE_", "");
 
 				// 4. Tạo Authentication object nếu token hợp lệ
 				if (username != null && SecurityContextHolder
@@ -88,6 +94,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 						.getContext()
 						.setAuthentication(authToken);
 				}
+				tokenContextUtil.setUsername(username);
+				tokenContextUtil.setRole(UserRole.valueOf(role.replace("ROLE_", "")));
+				tokenContextUtil.setUserId(claims.get("userId", String.class));
 			} catch (Exception e) {
 				response
 					.sendError(HttpServletResponse.SC_UNAUTHORIZED,
@@ -103,5 +112,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		// 5. Tiếp tục filter chain
 		filterChain.doFilter(request, response);
+		
+		
 	}
+	
+	
 }

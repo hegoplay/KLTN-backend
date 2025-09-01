@@ -1,6 +1,8 @@
 spring:
   profiles:
     active: dev
+  config:
+    import: optional:https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@raw.githubusercontent.com/hegoplay/tse-club-config/main/application-${spring.profiles.active}.yml
 management:
   endpoints:
     web:
@@ -19,7 +21,6 @@ management:
       enabled: true
 jwt:
   secret: k8wT5KF1ZrFojvpXJbhXOcYVv44lCKvOwQudCRY6HjxxTGH3WQbQDHEFZjhS+mCE
-
   header: Authorization
   prefix: Bearer
   expirationMs: 86400000 # 1 ngày tính bằng milliseconds

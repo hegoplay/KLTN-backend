@@ -1,5 +1,6 @@
 package iuh.fit.se.services.post_service.serviceImpl;
 
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +20,8 @@ import iuh.fit.se.services.post_service.repository.PostRepository;
 import iuh.fit.se.services.post_service.service.PostService;
 import iuh.fit.se.services.user_service.repository.AttachmentRepository;
 import iuh.fit.se.services.user_service.service.UserService;
+import iuh.fit.se.util.JwtTokenUtil;
+import iuh.fit.se.util.TokenContextUtil;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +38,9 @@ public class PostServiceImpl implements PostService {
 	PostMapping postMapper;
 	UserService userService;
 	AttachmentRepository attachmentRepository;
+	
+	JwtTokenUtil jwtTokenUtil;
+	TokenContextUtil tokenContextUtil;
 
 	@Override
 	public Page<Post> getAllPublicPosts(
@@ -76,8 +82,8 @@ public class PostServiceImpl implements PostService {
 	@Transactional
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER')")
 	public Post validatePost(String postId) {
-		User user = userService.getCurrentUser();
-		if (!user.isLeader()) {
+		
+		if (!tokenContextUtil.getRole().isLeaderOrHigher()) {
 			throw new RuntimeException(
 				"User is not authorized to validate post");
 		}
@@ -152,8 +158,7 @@ public class PostServiceImpl implements PostService {
 		String title,
 		Pageable pageable
 	) {
-		User user = userService.getCurrentUser();
-		if (!(user.isLeader() || user.getId().equals(userId))) {
+		if (!(tokenContextUtil.getRole().isLeaderOrHigher() || tokenContextUtil.getUserId().equals(userId))) {
 			throw new RuntimeException(
 				"User is not authorized to view posts of this user");
 		}

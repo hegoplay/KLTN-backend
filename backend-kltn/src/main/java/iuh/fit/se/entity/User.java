@@ -18,6 +18,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -49,6 +50,7 @@ public class User implements java.io.Serializable, UserDetails {
 	String password;
 	@Column(unique = true, nullable = false)
 	@Length(min = 5, max = 64)
+	@Email
 	String email;
 	String nickname;
 

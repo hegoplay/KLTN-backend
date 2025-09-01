@@ -22,13 +22,13 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import iuh.fit.se.filter.JwtAuthenticationFilter;
+import iuh.fit.se.filter.ThreadLocalCleanupFilter;
 import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableWebSecurity
 @Slf4j
 @EnableMethodSecurity(prePostEnabled = true)
-
 public class SecurityConfig {
 
 	// @Value("${frontend.url}")
@@ -38,14 +38,21 @@ public class SecurityConfig {
 	private JwtAuthenticationFilter jwtFilter;
 
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http)
-		throws Exception {
+	SecurityFilterChain securityFilterChain(
+		HttpSecurity http,
+		ThreadLocalCleanupFilter cleanupFilter
+	) throws Exception {
 		http
 			.csrf(csrf -> csrf.disable())
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/swagger-ui.html", "/swagger-ui/**",
-					"/v3/api-docs/**", "/api-docs/**")
+				.requestMatchers("/swagger-ui.html", "/swagger-ui/**", // ✅ Quan
+																		// trọng
+					"/v3/api-docs", // ✅ Quan trọng
+					"/v3/api-docs/**", // ✅ Quan trọng
+					"/api-docs/**", "/swagger-resources/**",
+					"/swagger-resources", "/webjars/**", "/configuration/ui",
+					"/configuration/security", "/favicon.ico")
 				.permitAll()
 				.requestMatchers("/api/auth/**")
 				.permitAll()
@@ -63,7 +70,8 @@ public class SecurityConfig {
 
 		http
 			.addFilterBefore(jwtFilter,
-				UsernamePasswordAuthenticationFilter.class);
+				UsernamePasswordAuthenticationFilter.class)
+			.addFilterAfter(cleanupFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}

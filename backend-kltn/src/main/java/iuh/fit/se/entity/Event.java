@@ -60,6 +60,9 @@ public abstract class Event {
 	@jakarta.persistence.JoinColumn(name = "host_id")
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	User host;
+	
+	@Column(name = "host_id", insertable = false, updatable = false)
+	String hostId;
 
 	@Embedded
 	Location location;

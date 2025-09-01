@@ -11,5 +11,9 @@ public interface AttachmentService {
 	
 	List<Attachment> getAttachmentsByUserId(String userId);
 	
+	void deleteAttachment(String name);
 	
+	void deleteMyAttachment(String name);
+	
+	Attachment getAttachmentByName(String name);
 }

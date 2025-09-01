@@ -3,12 +3,15 @@ package iuh.fit.se.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
@@ -47,10 +50,12 @@ public class Post {
 
 	@CreatedDate
 	@Builder.Default
+	@Column(updatable = false)
 	LocalDateTime postTime = LocalDateTime.now();
 
 	@ManyToOne
 	@JoinColumn(name = "image_id")
+	@OnDelete(action = OnDeleteAction.SET_NULL)
 	Attachment featureImage;
 
 	@OneToMany(mappedBy = "post",cascade = CascadeType.REMOVE, orphanRemoval = true)

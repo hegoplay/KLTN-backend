@@ -30,9 +30,9 @@ import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.enumerator.EventCategory;
 import iuh.fit.se.services.event_service.dto.enumerator.EventSearchType;
 import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
-import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventOrganizerSingleRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventSearchRequestDto;
+import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import iuh.fit.se.services.event_service.mapper.EventOrganizerMapper;
 import iuh.fit.se.services.event_service.patterns.factoryPattern.ContestFactory;
@@ -45,9 +45,12 @@ import iuh.fit.se.services.event_service.repository.EventRepository;
 import iuh.fit.se.services.event_service.service.EventCodeService;
 import iuh.fit.se.services.event_service.service.EventService;
 import iuh.fit.se.services.event_service.specification.EventSpecification;
+import iuh.fit.se.services.training_service.repository.TrainingRepository;
 import iuh.fit.se.services.user_service.repository.UserRepository;
 import iuh.fit.se.services.user_service.service.UserService;
 import iuh.fit.se.util.ContextUtil;
+import iuh.fit.se.util.JwtTokenUtil;
+import iuh.fit.se.util.TokenContextUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -62,24 +65,26 @@ public class EventServiceImpl implements EventService {
 	EventOrganizerMapper eventOrganizerMapper;
 
 	UserService userService;
+	EventCodeService eventCodeService;
 
 	EventRepository eventRepository;
 	UserRepository userRepository;
 	EventOrganizerRepository eventOrganizerRepository;
 	EventAttendeeRepository eventAttendeeRepository;
+	TrainingRepository trainingRepository;
 
 	GlobalConfigurationRepository globalConfigurationRepository;
 
-	EventCodeService eventCodeService;
+	TokenContextUtil tokenContextUtil;
 
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('MEMBER') or hasRole('LEADER')")
 	@Transactional
 	public EventDetailResponseDto createEvent(EventCreateRequestDto dto) {
 		log.info("Creating event: {}", dto);
-		User currentUser = userService.getCurrentUser();
+		
 
-		if (!currentUser.isLeader()
+		if (!tokenContextUtil.getRole().isLeaderOrHigher()
 			&& dto.category() == EventCategory.CLOSED_CONTEST) {
 			throw new IllegalArgumentException(
 				"Only leaders can create closed contests");
@@ -89,10 +94,6 @@ public class EventServiceImpl implements EventService {
 		Event savedEvent = eventRepository.save(e);
 		EventDetailResponseDto eventDetailResponseDto = factory
 			.toEventDetailResponseDto(savedEvent);
-
-		// Attendee attendee =
-		// savedEvent.getAttendeeByUserId(currentUser.getId());
-		// eventDetailResponseDto.setUserAttendeeStatus(attendee.getStatus());
 
 		return eventDetailResponseDto;
 	}
@@ -113,7 +114,6 @@ public class EventServiceImpl implements EventService {
 				"Không thể xóa sự kiện đã hoàn thành");
 		}
 		eventRepository.deleteById(eventId);
-		log.info("Deleted event with ID: {}", eventId);
 	}
 
 	@Override
@@ -378,9 +378,9 @@ public class EventServiceImpl implements EventService {
 			.orElseThrow(() -> new NotFoundErrorHandler(
 				"Event with ID " + eventId + " does not exist"));
 		// Check if the current user is the host or an attendee
-		User currentUser = userService.getCurrentUser();
+		String userId = tokenContextUtil.getUserId();
 		// Check if the user is the host, an organizer, or a leader
-		if (!checkEventRole(event, currentUser.getId(), OrganizerRole.CODE)) {
+		if (!checkEventRole(event, userId, OrganizerRole.CODE)) {
 			throw new SecurityException(
 				"Only the host, organizers with CODE role, or leader can get the event code");
 		}
@@ -420,7 +420,7 @@ public class EventServiceImpl implements EventService {
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
 	public void manualCheckInEvent(String eventId, List<String> attendeeIds) {
-		String currentUserId = userService.getCurrentUser().getId();
+		String currentUserId = tokenContextUtil.getUserId();
 		Event event = eventRepository
 			.findById(eventId)
 			.orElseThrow(() -> new NotFoundErrorHandler(
@@ -523,7 +523,7 @@ public class EventServiceImpl implements EventService {
 
 	@Override
 	public void selfTriggerRegisterEvent(String eventId) {
-		String currentUserId = userService.getCurrentUser().getId();
+		String currentUserId = tokenContextUtil.getUserId();
 		Event event = eventRepository
 			.findById(eventId)
 			.orElseThrow(() -> new NotFoundErrorHandler(
@@ -546,7 +546,7 @@ public class EventServiceImpl implements EventService {
 		String eventId,
 		List<String> attendeesIds
 	) {
-		String currentUserId = userService.getCurrentUser().getId();
+		String currentUserId = tokenContextUtil.getUserId();
 		Event event = eventRepository
 			.findById(eventId)
 			.orElseThrow(() -> new NotFoundErrorHandler(
@@ -574,13 +574,12 @@ public class EventServiceImpl implements EventService {
 					"Duplicate organizer ID in request: " + req.organizerId());
 			}
 		});
-		User currentUser = userService.getCurrentUser();
 		Event event = eventRepository
 			.findByIdAndFetchOrganizers(eventId)
 			.orElseThrow(() -> new IllegalArgumentException(
 				"Event with ID " + eventId + " does not exist"));
 
-		if (!checkEventRole(event, currentUser.getId(), null)) {
+		if (!checkEventRole(event, tokenContextUtil.getUserId(), null)) {
 			throw new SecurityException(
 				"Only the host, organizers, or leader can update organizers for this event");
 		}
@@ -764,7 +763,7 @@ public class EventServiceImpl implements EventService {
 		return switch (dto.category()) {
 			case SEMINAR -> new SeminarFactory(eventMapper);
 			case CONTEST -> new ContestFactory(eventMapper);
-			case TRAINING_EVENT -> new TrainingEventFactory(eventMapper);
+			case TRAINING_EVENT -> new TrainingEventFactory(eventMapper, trainingRepository);
 			case CLOSED_CONTEST -> new ContestFactory(eventMapper);
 			// ClosedContestFactory(eventMapper);
 			default -> throw new IllegalArgumentException(
@@ -782,7 +781,7 @@ public class EventServiceImpl implements EventService {
 			}
 			return new ContestFactory(eventMapper);
 		} else {
-			return new TrainingEventFactory(eventMapper);
+			return new TrainingEventFactory(eventMapper, trainingRepository);
 		}
 	}
 
