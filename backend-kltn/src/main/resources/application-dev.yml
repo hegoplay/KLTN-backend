@@ -1,4 +1,4 @@
-spring:
+:spring:
   config:
     activate:
       on-profile: dev
@@ -21,6 +21,10 @@ spring:
     redis:
       host: ${SPRING_REDIS_HOST:localhost}
       port: ${SPRING_REDIS_PORT:6379}
+logging:
+  level:
+    root: INFO
+    '[iuh.fit.se]': DEBUG
 jwt:
   secret: k8wT5KF1ZrFojvpXJbhXOcYVv44lCKvOwQudCRY6HjxxTGH3WQbQDHEFZjhS+mCE
   header: Authorization

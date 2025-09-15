@@ -137,4 +137,16 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.of(problemDetail).build();
 	}
 
+	@ExceptionHandler(IllegalStateException.class)
+	protected ResponseEntity<ProblemDetail> handleNotFoundException(
+		IllegalStateException ex,
+		HttpServletRequest request
+	) {
+		ProblemDetail problemDetail = ProblemDetail
+			.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+		problemDetail.setTitle("Bad Request");
+		log.error("Bad Request: {}", ex.getMessage());
+		return ResponseEntity.of(problemDetail).build();
+	}
+	
 }

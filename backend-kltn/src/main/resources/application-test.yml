@@ -14,13 +14,20 @@ spring:
       enabled: true
       path: /h2-console
   jpa:
+    defer-datasource-initialization: true
+    
     hibernate:
       ddl-auto: create-drop # hoặc 'create-drop' nếu muốn tạo mới mỗi lần khởi động
+      
     show-sql: true
   data:
     redis:
       host: ${SPRING_REDIS_HOST:localhost}
       port: ${SPRING_REDIS_PORT:6379}
+logging:
+  level:
+    root: INFO
+    '[iuh.fit.se]': DEBUG
 jwt:
   secret: k8wT5KF1ZrFojvpXJbhXOcYVv44lCKvOwQudCRY6HjxxTGH3WQbQDHEFZjhS+mCE
 
@@ -28,4 +35,4 @@ jwt:
   prefix: Bearer
   expirationMs: 86400000 # 1 ngày tính bằng milliseconds
 server:
-  port: 8081
+  port: 0

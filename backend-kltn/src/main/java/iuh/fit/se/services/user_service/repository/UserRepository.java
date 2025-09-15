@@ -2,6 +2,7 @@ package iuh.fit.se.services.user_service.repository;
 
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -49,4 +50,11 @@ public interface UserRepository extends JpaRepository<User, String> {
 	@Modifying
 	@Query("UPDATE User u SET u.attendancePoint = 0")
 	void resetAllAttendancePoint();
+	
+	Page<User> findByUsernameContainingIgnoreCaseOrFullNameContainingIgnoreCaseOrId(
+		String username,
+		String fullName,
+		String id,
+		org.springframework.data.domain.Pageable pageable
+	);
 }

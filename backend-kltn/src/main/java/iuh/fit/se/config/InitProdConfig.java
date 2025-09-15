@@ -24,7 +24,6 @@ import iuh.fit.se.services.event_service.repository.EventRepository;
 import iuh.fit.se.services.user_service.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 @Configuration
@@ -64,7 +63,7 @@ public class InitProdConfig {
 					Event event = Contest
 						.builder()
 						.title("Sự kiện mẫu")
-						.content("Đây là sự kiện mẫu được tạo tự động.")
+						.description("Đây là sự kiện mẫu được tạo tự động.")
 						.location(new Location("H32",
 							LocalDateTime.now().plusDays(-3),
 							LocalDateTime.now().plusDays(3).plusHours(2)))

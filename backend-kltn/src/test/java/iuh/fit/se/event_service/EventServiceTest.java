@@ -18,15 +18,17 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.test.context.support.WithMockUser;
 
+import iuh.fit.se.common.dto.LocationDto;
 import iuh.fit.se.entity.Event;
 import iuh.fit.se.entity.Location;
 import iuh.fit.se.entity.Seminar;
 import iuh.fit.se.entity.User;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
-import iuh.fit.se.services.event_service.dto.LocationDto;
 import iuh.fit.se.services.event_service.dto.enumerator.EventCategory;
-import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.BaseEventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.SingleEventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.TrainingEventCreateRequestDto;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import iuh.fit.se.services.event_service.repository.EventRepository;
 import iuh.fit.se.services.event_service.serviceImpl.EventServiceImpl;
@@ -48,9 +50,9 @@ public class EventServiceTest {
 	@InjectMocks
 	private EventServiceImpl eventService;
 
-	private EventCreateRequestDto seminarRequest;
-	private EventCreateRequestDto contestRequest;
-	private EventCreateRequestDto trainingRequest;
+	private SingleEventCreateRequestDto seminarRequest;
+	private BaseEventCreateRequestDto contestRequest;
+	private BaseEventCreateRequestDto trainingRequest;
 
 	private LocationDto locationDto;
 
@@ -76,20 +78,46 @@ public class EventServiceTest {
 			.endTime(LocalDateTime.now().plusHours(2))
 			.build();
 
-		seminarRequest = new EventCreateRequestDto("Test Seminar",
-			"Description", locationDto, Integer.valueOf(1),
-			FunctionStatus.PENDING, List.of(), null, EventCategory.SEMINAR);
+		seminarRequest = SingleEventCreateRequestDto
+			.builder()
+			.title("Test Seminar")
+			.description("Description")
+			.location(locationDto)
+			.multiple(Integer.valueOf(1))
+			.status(FunctionStatus.PENDING)
+			.organizers(List.of())
+			.category(EventCategory.SEMINAR)
+			.build();
 
-		contestRequest = new EventCreateRequestDto("Test Contest",
-			"Description", locationDto, Integer.valueOf(1),
-			FunctionStatus.PENDING, List.of(), null, EventCategory.CONTEST);
+		contestRequest = SingleEventCreateRequestDto
+			.builder()
+			.title("Test Contest")
+			.description("Description")
+			.location(locationDto)
+			.multiple(Integer.valueOf(1))
+			.status(FunctionStatus.PENDING)
+			.organizers(List.of())
+			.category(EventCategory.CONTEST)
+			.build();
 
-		trainingRequest = new EventCreateRequestDto("Test Training",
-			"Description", locationDto, Integer.valueOf(1),
-			FunctionStatus.PENDING, List.of(), null, EventCategory.CONTEST);
+		
+		
+//		trainingRequest = new BaseEventCreateRequestDto("Test Training",
+//			"Description", locationDto, Integer.valueOf(1),
+//			FunctionStatus.PENDING, List.of(), EventCategory.CONTEST);
+		trainingRequest = TrainingEventCreateRequestDto
+			.builder()
+			.title("Test Training")
+			.description("Description")
+			.location(locationDto)
+			.multiple(Integer.valueOf(1))
+			.organizers(List.of())
+			.category(EventCategory.TRAINING_EVENT)
+			.build();
 	}
 
-	@Test @WithMockUser(username = "hegoplay", roles = {"MEMBER"})
+	@Test
+	@WithMockUser(username = "hegoplay", roles = {"MEMBER"})
 	void createEvent_WithSeminarCategory_ShouldReturnSeminar() {
 		// Arrange
 		Seminar mockSeminar = new Seminar();

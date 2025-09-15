@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   config:
     import: optional:https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@raw.githubusercontent.com/hegoplay/tse-club-config/main/application-${spring.profiles.active}.yml
 management:

@@ -1,11 +1,13 @@
 package iuh.fit.se.services.event_service.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import iuh.fit.se.common.dto.LocationDto;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.event_service.dto.enumerator.EventCategory;
 import iuh.fit.se.services.event_service.dto.enumerator.EventTimeStatus;
 import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
@@ -15,6 +17,7 @@ import lombok.experimental.SuperBuilder;
 @lombok.experimental.FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @EqualsAndHashCode
 @Schema(description = "DTO dùng để trả về thông tin cơ bản của sự kiện")
+@ToString
 public class EventWrapperDto {
 	@EqualsAndHashCode.Include
 	@Schema(description = "event_id", example = "event uuid"
@@ -36,7 +39,7 @@ public class EventWrapperDto {
 	@Schema(
 		description = "Mô tả chi tiết về sự kiện",
 		example = "Hội thảo này sẽ tập trung vào các ứng dụng mới nhất của trí tuệ nhân tạo trong các lĩnh vực khác nhau.")
-	String content;
+	String description;
 	@Schema(
 		description = "Hệ số nhân điểm cho sự kiện (ít nhất là 1)",
 		example = "1")

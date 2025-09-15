@@ -1,4 +1,4 @@
-package iuh.fit.se.services.event_service.dto;
+package iuh.fit.se.common.dto;
 
 import java.time.LocalDateTime;
 

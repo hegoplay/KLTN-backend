@@ -17,4 +17,11 @@ public enum FunctionStatus {
 	public static boolean ableToUpdate(FunctionStatus status) {
 		return status == PENDING || status == ARCHIVED || status == DISABLED;
 	}
+	public boolean isAbleToCreate() {
+		return ableToCreate(this);
+	}
+	
+	public boolean isAbleToUpdate() {
+		return ableToUpdate(this);
+	}
 }

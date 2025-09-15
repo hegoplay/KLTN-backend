@@ -1,8 +1,8 @@
 package iuh.fit.se.services.event_service.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import iuh.fit.se.common.dto.LocationDto;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
-import iuh.fit.se.services.event_service.dto.LocationDto;
 import jakarta.validation.constraints.Min;
 
 public record EventUpdateRequestDto(
@@ -22,7 +22,7 @@ public record EventUpdateRequestDto(
 		example = "Sự kiện này sẽ tập trung vào các xu hướng mới nhất trong lĩnh vực Công nghệ Thông tin...",
 		requiredMode = Schema.RequiredMode.NOT_REQUIRED
 	)
-	String content,
+	String description,
 	@Min(1)
 	@Schema(
 		description = "Hệ số nhân điểm cho sự kiện (ít nhất là 1)",

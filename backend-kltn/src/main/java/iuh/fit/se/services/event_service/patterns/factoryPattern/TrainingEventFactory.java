@@ -1,9 +1,16 @@
 package iuh.fit.se.services.event_service.patterns.factoryPattern;
 
+import java.util.HashSet;
+
 import iuh.fit.se.entity.Event;
+import iuh.fit.se.entity.EventOrganizer;
+import iuh.fit.se.entity.Training;
 import iuh.fit.se.entity.TrainingEvent;
+import iuh.fit.se.entity.User;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
-import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.BaseEventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.EventOrganizerSingleRequestDto;
+import iuh.fit.se.services.event_service.dto.request.TrainingEventCreateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import iuh.fit.se.services.training_service.repository.TrainingRepository;
@@ -12,16 +19,22 @@ import lombok.experimental.FieldDefaults;
 
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
-public class TrainingEventFactory extends GenerateEventFactory {
+public class TrainingEventFactory extends EventFactory {
 
 	EventMapper eventMapper;
 	TrainingRepository trainingRepository;
 
 	@Override
-	protected Event generateEvent(EventCreateRequestDto dto) {
-		TrainingEvent seminar = eventMapper.toTrainingEvent(dto);
-		seminar
-			.setTraining(trainingRepository.getReferenceById(dto.trainingId()));
+	protected Event generateEvent(BaseEventCreateRequestDto dto) {
+
+		TrainingEventCreateRequestDto etDto = (TrainingEventCreateRequestDto) dto;
+		TrainingEvent seminar = eventMapper.toTrainingEvent(etDto);
+		if (etDto.getTrainingId() != null) {
+			seminar
+				.setTraining(
+					trainingRepository.getReferenceById(etDto.getTrainingId()));
+		}
+
 		return seminar;
 	}
 
@@ -37,9 +50,36 @@ public class TrainingEventFactory extends GenerateEventFactory {
 
 	@Override
 	protected Event handleUpdateEvent(Event e, EventUpdateRequestDto dto) {
-		TrainingEvent training = (TrainingEvent) e;
-		eventMapper.updateEventFromDto(dto, training);
-		return training;
+		TrainingEvent trainingEvent = (TrainingEvent) e;
+		eventMapper.updateEventFromDto(dto, trainingEvent);
+		return trainingEvent;
+	}
+
+	@Override
+	protected void addNewOrganizerToEvent(
+		Event event,
+		EventOrganizerSingleRequestDto req,
+		User organizerUser
+	) {
+		TrainingEvent trainingEvent = (TrainingEvent) event;
+		Training training = trainingEvent.getTraining();
+
+		if (!training.getMentors().contains(organizerUser)) {
+			throw new IllegalArgumentException(
+				"The organizer must be a mentor of the associated training");
+		}
+		EventOrganizer organizer = EventOrganizer
+			.builder()
+			.organizerId(organizerUser.getId())
+			.eventId(event.getId())
+			.event(event)
+			.organizer(organizerUser)
+			.roles(req.roles() != null
+				? new HashSet<>(req.roles())
+				: new HashSet<>())
+			.roleContent(req.roleContent())
+			.build();
+		event.addOrganizer(organizer);
 	}
 
 }

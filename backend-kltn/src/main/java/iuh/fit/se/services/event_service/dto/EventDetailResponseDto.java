@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
@@ -18,6 +19,7 @@ import lombok.experimental.SuperBuilder;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = true)
 @Schema(description = "DTO dùng để trả về chi tiết thông tin sự kiện")
+@ToString(callSuper = true)
 public class EventDetailResponseDto extends EventWrapperDto {
 	List<EventOrganizerDto> organizers;
 	Boolean isHost;

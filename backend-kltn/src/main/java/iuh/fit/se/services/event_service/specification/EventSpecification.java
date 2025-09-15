@@ -4,7 +4,6 @@ import org.springframework.data.jpa.domain.Specification;
 
 import iuh.fit.se.entity.Event;
 import iuh.fit.se.entity.EventOrganizer;
-import iuh.fit.se.entity.User;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -22,13 +21,13 @@ public class EventSpecification {
 		};
 	}
 
-	public static Specification<Event> hasContentContaining(String keyword) {
+	public static Specification<Event> hasDescriptionContaining(String keyword) {
 		return (root, query, criteriaBuilder) -> {
 			if (keyword == null || keyword.isEmpty()) {
 				return criteriaBuilder.conjunction();
 			}
 			return criteriaBuilder
-				.like(criteriaBuilder.lower(root.get("content")),
+				.like(criteriaBuilder.lower(root.get("description")),
 					"%" + keyword.toLowerCase() + "%");
 		};
 	}
@@ -69,7 +68,7 @@ public class EventSpecification {
 		return (root, query, criteriaBuilder) -> {
 			
 			// Join với bảng organizers
-			Join<Event, EventOrganizer> organizersJoin = root.join("organizers", JoinType.INNER);			
+			Join<Event, EventOrganizer> organizersJoin = root.join("organizers", JoinType.LEFT);			
 			
 			return criteriaBuilder
 			.equal(organizersJoin.get("organizerId"), organizerId);

@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import iuh.fit.se.entity.Event;
+import iuh.fit.se.entity.TrainingEvent;
 
 @Repository
 public interface EventRepository
@@ -31,5 +32,5 @@ public interface EventRepository
 	@EntityGraph(attributePaths = {"organizers"})
 	@Query("SELECT e FROM Event e WHERE e.id = :id")
 	Optional<Event> findByIdAndFetchOrganizers(@Param("id") String id);
-	
+		
 }

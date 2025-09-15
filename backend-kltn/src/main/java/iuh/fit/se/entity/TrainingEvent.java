@@ -1,5 +1,6 @@
 package iuh.fit.se.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -20,8 +21,10 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @ToString(callSuper = true)
 public class TrainingEvent extends Event {
-	@ManyToOne
-	@JoinColumn(name = "training_id")
+	@ManyToOne(
+		cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
+				CascadeType.DETACH})
+	@JoinColumn(name = "training_id", nullable = false)
 	@ToString.Exclude
 	Training training;
 

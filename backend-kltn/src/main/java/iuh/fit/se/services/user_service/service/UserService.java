@@ -1,5 +1,8 @@
 package iuh.fit.se.services.user_service.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import iuh.fit.se.entity.User;
 import iuh.fit.se.services.user_service.dto.RegisterRequestDto;
 
@@ -10,16 +13,13 @@ public interface UserService {
 	void registerUser(RegisterRequestDto dto);
 	
 	User loadUserByUsernameOrEmail(String usernameOrEmail);
-	
 	User getUserById(String userId);
-	
 	User getUserByUsernameOrEmail(String usernameOrEmail);
-	
 	User getCurrentUser();
-	
 	User getUserByKeyword(String keyword);
 
 	void resetAllAttendancePoint();
-	
 	void resetAllContributionPoint();
+	
+	Page<User> searchUsers(String keyword, Pageable pageable);
 }

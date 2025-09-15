@@ -1,25 +1,40 @@
 package iuh.fit.se.services.event_service.patterns.factoryPattern;
 
+import java.util.HashSet;
+
 import iuh.fit.se.entity.Contest;
 import iuh.fit.se.entity.Event;
+import iuh.fit.se.entity.EventOrganizer;
+import iuh.fit.se.entity.User;
+import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.enumerator.EventCategory;
-import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.BaseEventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.EventOrganizerSingleRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.SingleEventCreateRequestDto;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
-public class ContestFactory extends GenerateEventFactory {
+public class ContestFactory extends EventFactory {
 
 	EventMapper eventMapper;
 
 	@Override
-	protected Event generateEvent(EventCreateRequestDto dto) {
-		Contest contest = eventMapper.toContest(dto);
+	protected Event generateEvent(BaseEventCreateRequestDto dto) {
+		if (!(dto instanceof SingleEventCreateRequestDto)) {
+			throw new IllegalArgumentException(
+				"Invalid DTO type for Closed Contest");
+		}
+		Contest contest = eventMapper
+			.toContest((SingleEventCreateRequestDto) dto);
 		contest.setAbleToRegister(true);
+		if (contest.getStatus() == null) {
+			contest.setStatus(FunctionStatus.ARCHIVED);
+		}
 		return contest;
 	}
 
@@ -54,6 +69,26 @@ public class ContestFactory extends GenerateEventFactory {
 		}
 
 		return contest;
+	}
+
+	@Override
+	protected void addNewOrganizerToEvent(
+		Event event,
+		EventOrganizerSingleRequestDto req,
+		User organizerUser
+	) {
+		EventOrganizer organizer = EventOrganizer
+			.builder()
+			.organizerId(organizerUser.getId())
+			.eventId(event.getId())
+			.event(event)
+			.organizer(organizerUser)
+			.roles(req.roles() != null
+				? new HashSet<>(req.roles())
+				: new HashSet<>())
+			.roleContent(req.roleContent())
+			.build();
+		event.addOrganizer(organizer);
 	}
 
 }

@@ -41,9 +41,8 @@ import lombok.experimental.SuperBuilder;
 @Table(name = "events")
 @DiscriminatorColumn(
 	name = "event_type",
-	discriminatorType = jakarta.persistence.DiscriminatorType.STRING
-)
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	discriminatorType = jakarta.persistence.DiscriminatorType.STRING)
+@Inheritance(strategy = InheritanceType.JOINED)
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -60,21 +59,21 @@ public abstract class Event {
 	@jakarta.persistence.JoinColumn(name = "host_id")
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	User host;
-	
+
 	@Column(name = "host_id", insertable = false, updatable = false)
 	String hostId;
 
 	@Embedded
 	Location location;
+	@Column(nullable = false)
 	String title;
-	String content;
+	String description;
 
 	@OneToMany(
-	    mappedBy = "event",
-	    cascade = jakarta.persistence.CascadeType.ALL,
-	    orphanRemoval = true,
-	    fetch = FetchType.LAZY
-	)
+		mappedBy = "event",
+		cascade = jakarta.persistence.CascadeType.ALL,
+		orphanRemoval = true,
+		fetch = FetchType.LAZY)
 	@Builder.Default
 	@MapKey(name = "userId") // Sử dụng user ID làm key
 	Map<String, Attendee> attendeesMap = new HashMap<>();
@@ -83,8 +82,7 @@ public abstract class Event {
 		mappedBy = "event",
 		cascade = jakarta.persistence.CascadeType.ALL,
 		orphanRemoval = true,
-		fetch = FetchType.LAZY
-	)
+		fetch = FetchType.LAZY)
 	@Builder.Default
 	@ToString.Exclude
 	List<EventOrganizer> organizers = new ArrayList<>();
@@ -96,88 +94,99 @@ public abstract class Event {
 	FunctionStatus status = FunctionStatus.ARCHIVED;
 
 	boolean done = false;
-	
+
 	LocalDateTime doneTime;
-	
+
 	Boolean single;
-	
+
 	protected abstract boolean isSingleTable();
-	
+
 	@PrePersist
-    @PreUpdate
-    private void initializedIsSingle() {
-        if (single == null) {
-        	this.single = Boolean.valueOf(isSingleTable());
-        }
-    }
-	
+	@PreUpdate
+	private void initializedIsSingle() {
+		if (single == null) {
+			this.single = Boolean.valueOf(isSingleTable());
+		}
+	}
+
 	public boolean checkAttendeeExists(String userId) {
-		return this.attendeesMap != null && this.attendeesMap.containsKey(userId);
+		return this.attendeesMap != null
+			&& this.attendeesMap.containsKey(userId);
 	}
-	
+
 	public void addAttendee(Attendee attendee) {
-	    if (this.attendeesMap == null) {
-	        this.attendeesMap = new HashMap<>();
-	    }
-	    attendee.setEvent(this);
-	    this.attendeesMap.put(attendee.getUser().getId(), attendee);
+		if (this.attendeesMap == null) {
+			this.attendeesMap = new HashMap<>();
+		}
+		attendee.setEvent(this);
+		this.attendeesMap.put(attendee.getUser().getId(), attendee);
 	}
-	
+
 	public void removeAttendee(Attendee attendee) {
-	    if (this.attendeesMap != null) {
-	        this.attendeesMap.remove(attendee.getUserId());
-	        attendee.setEvent(null);
-	        attendee.setEventId(null);
-	    }    
+		if (this.attendeesMap != null) {
+			this.attendeesMap.remove(attendee.getUserId());
+			attendee.setEvent(null);
+			attendee.setEventId(null);
+		}
 	}
-	
+
 	public void addOrganizer(EventOrganizer organizer) {
 		if (this.organizers == null) {
 			this.organizers = new ArrayList<>();
 		}
 		organizer.setEvent(this);
 		this.organizers.add(organizer);
-	}	
+	}
 
-	
 	public void removeOrganizer(EventOrganizer organizer) {
 		if (this.organizers != null) {
 			this.organizers.remove(organizer);
 			organizer.setEvent(null);
-		}	
-	}	
-	
-	public void checkIn(String userId) {
-		if (this.attendeesMap != null && this.attendeesMap.containsKey(userId)) {
-			Attendee attendee = this.attendeesMap.get(userId);
-			if (attendee.getStatus() == iuh.fit.se.entity.enumerator.AttendeeStatus.CHECKED) {
-				throw new IllegalStateException("User with ID " + userId + " has already checked in.");
-			}
-			if (attendee.getStatus() == iuh.fit.se.entity.enumerator.AttendeeStatus.BANNED) {
-				throw new IllegalStateException("User with ID " + userId + " is banned from this event.");
-			}
-			attendee.setStatus(iuh.fit.se.entity.enumerator.AttendeeStatus.CHECKED);
-		} else {
-			throw new IllegalArgumentException("User with ID " + userId + " is not an attendee of this event.");
 		}
-		
 	}
-	
+
+	public void checkIn(String userId) {
+		if (this.attendeesMap != null
+			&& this.attendeesMap.containsKey(userId)) {
+			Attendee attendee = this.attendeesMap.get(userId);
+			if (attendee
+				.getStatus() == iuh.fit.se.entity.enumerator.AttendeeStatus.CHECKED) {
+				throw new IllegalStateException(
+					"User with ID " + userId + " has already checked in.");
+			}
+			if (attendee
+				.getStatus() == iuh.fit.se.entity.enumerator.AttendeeStatus.BANNED) {
+				throw new IllegalStateException(
+					"User with ID " + userId + " is banned from this event.");
+			}
+			attendee
+				.setStatus(iuh.fit.se.entity.enumerator.AttendeeStatus.CHECKED);
+		} else {
+			throw new IllegalArgumentException("User with ID " + userId
+				+ " is not an attendee of this event.");
+		}
+
+	}
+
 	public void cancelRegistration(String userId) {
-		if (this.attendeesMap != null && this.attendeesMap.containsKey(userId)) {
+		if (this.attendeesMap != null
+			&& this.attendeesMap.containsKey(userId)) {
 			Attendee attendee = this.attendeesMap.get(userId);
 			if (attendee.getStatus() == AttendeeStatus.CHECKED) {
-				throw new IllegalStateException("User with ID " + userId + " has already checked in and cannot cancel registration.");
+				throw new IllegalStateException("User with ID " + userId
+					+ " has already checked in and cannot cancel registration.");
 			}
 			if (attendee.getStatus() == AttendeeStatus.BANNED) {
-				throw new IllegalStateException("User with ID " + userId + " is banned from this event and cannot cancel registration.");
+				throw new IllegalStateException("User with ID " + userId
+					+ " is banned from this event and cannot cancel registration.");
 			}
 			removeAttendee(attendee);
 		} else {
-			throw new IllegalArgumentException("User with ID " + userId + " is not an attendee of this event.");
+			throw new IllegalArgumentException("User with ID " + userId
+				+ " is not an attendee of this event.");
 		}
 	}
-	
+
 	public EventOrganizer getOrganizerByUserId(String userId) {
 		if (this.organizers != null) {
 			for (EventOrganizer organizer : this.organizers) {
@@ -188,12 +197,13 @@ public abstract class Event {
 		}
 		return null;
 	}
-	
+
 	public Attendee getAttendeeByUserId(String userId) {
-		if (this.attendeesMap != null && this.attendeesMap.containsKey(userId)) {
+		if (this.attendeesMap != null
+			&& this.attendeesMap.containsKey(userId)) {
 			return this.attendeesMap.get(userId);
 		}
 		return null;
 	}
-	
+
 }

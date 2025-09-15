@@ -9,13 +9,13 @@ import iuh.fit.se.entity.Event;
 import iuh.fit.se.entity.EventOrganizer;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
-import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.BaseEventCreateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventOrganizerSingleRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventSearchRequestDto;
 
 public interface EventService {
-	EventDetailResponseDto createEvent(EventCreateRequestDto dto);
+	EventDetailResponseDto createEvent(BaseEventCreateRequestDto dto);
 
 	void deleteEvent(String eventId);
 
@@ -42,7 +42,8 @@ public interface EventService {
 
 	EventDetailResponseDto getEventByIdAndUserId(String eventId, String userId);
 
-	void updateEventStatus(String eventId, FunctionStatus status);
+	void updateSingleEventStatus(String eventId, FunctionStatus status);
+	void updateEventStatusWithoutSaving(Event event, FunctionStatus status);
 
 	void triggerEventDone(String eventId);
 
@@ -51,8 +52,12 @@ public interface EventService {
 	void selfTriggerRegisterEvent(String eventId);
 
 	void manualTriggerRegisterEvent(String eventId, List<String> attendeeIds);
-
+	
 	void triggerRegisterEvent(Event e, String userId);
+	
+	Event registerEventWithoutSaving(Event e, String userId);
+	
+	Event unregisterEventWithoutSaving(Event e, String userId);
 
 	void selfCheckInEvent(String eventId, String userId, String otp);
 
@@ -66,5 +71,5 @@ public interface EventService {
 	
 	void triggerBan(String eventId, List<String> attendeesId, String currentUserId);
 	
-	EventDetailResponseDto updateSingleEvent(String eventId, EventUpdateRequestDto dto, String currentUserId);
+	EventDetailResponseDto updateEvent(String eventId, EventUpdateRequestDto dto, String currentUserId);
 }

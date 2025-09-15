@@ -62,7 +62,7 @@ public class InitConfig {
 					Event event = Contest
 						.builder()
 						.title("Sự kiện mẫu")
-						.content("Đây là sự kiện mẫu được tạo tự động.")
+						.description("Đây là sự kiện mẫu được tạo tự động.")
 						.location(new Location("H32",
 							LocalDateTime.now().plusDays(-3),
 							LocalDateTime.now().plusDays(3).plusHours(2)))

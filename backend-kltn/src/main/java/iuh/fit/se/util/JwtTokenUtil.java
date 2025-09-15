@@ -9,17 +9,13 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import iuh.fit.se.entity.User;
-import iuh.fit.se.entity.enumerator.UserRole;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 
 @Component
 @lombok.NoArgsConstructor
@@ -32,7 +28,7 @@ public class JwtTokenUtil {
 	private int jwtExpirationMs;
 
 	private Key secretKey;
-	
+
 	@PostConstruct
 	public void init() {
 		// Khởi tạo secretKey từ jwtSecret
@@ -51,7 +47,7 @@ public class JwtTokenUtil {
 					.findFirst()
 					.orElse("NONE")); // Mặc định là USER nếu không có quyền nào
 		claims.put("userId", userDetails.getId()); // Giả sử username là
-														// userId
+													// userId
 		claims.put("fullName", userDetails.getFullName());
 
 		return createToken(claims, userDetails.getUsername());
@@ -69,8 +65,8 @@ public class JwtTokenUtil {
 			.signWith(secretKey)
 			.compact();
 	}
-	
-	public  String getUserIdFromToken(String token) {
+
+	public String getUserIdFromToken(String token) {
 		return Jwts
 			.parser()
 			.verifyWith(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
@@ -99,9 +95,11 @@ public class JwtTokenUtil {
 				.parseSignedClaims(token)
 				.getPayload();
 			@SuppressWarnings("unchecked")
-			List<String> roles = (List<String>) payload.get("roles", Collection.class).stream()
-			    .map(Object::toString)
-			    .collect(Collectors.toList());
+			List<String> roles = (List<String>) payload
+				.get("roles", Collection.class)
+				.stream()
+				.map(Object::toString)
+				.collect(Collectors.toList());
 			return roles;
 		} catch (Exception e) {
 			return List.of("NONE");
@@ -134,7 +132,7 @@ public class JwtTokenUtil {
 		} catch (Exception e) {
 			throw new RuntimeException("Invalid token", e);
 		}
-			
+
 	}
 
 	public String getTokenFromRequest(HttpServletRequest request) {
@@ -144,11 +142,9 @@ public class JwtTokenUtil {
 		}
 		return null; // Trả về null nếu không có token
 	}
-	
+
 	public String getUserIdFromRequest(HttpServletRequest request) {
 		return getUserIdFromToken(getTokenFromRequest(request));
 	}
-	
 
-	
 }

@@ -37,11 +37,11 @@ import iuh.fit.se.services.event_service.dto.EventOrganizerDto;
 import iuh.fit.se.services.event_service.dto.EventWrapperDto;
 import iuh.fit.se.services.event_service.dto.enumerator.EventSearchType;
 import iuh.fit.se.services.event_service.dto.request.CheckInRequestDto;
-import iuh.fit.se.services.event_service.dto.request.EventCreateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventSearchRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.ListEventOrganizerRequestDto;
 import iuh.fit.se.services.event_service.dto.request.ManualTriggerRequestDto;
+import iuh.fit.se.services.event_service.dto.request.SingleEventCreateRequestDto;
 import iuh.fit.se.services.event_service.dto.response.EventCodeResponseDto;
 import iuh.fit.se.services.event_service.mapper.EventAttendeeMapper;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
@@ -66,7 +66,7 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(
 	name = "Event Management",
 	description = """
-		API này hỗ trợ các công việc quản lý sự kiện (ngoại trừ sự kiện training và lấy thông tin sự kiện).
+		API này hỗ trợ các công việc quản lý sự kiện (một số cái không hỗ trợ cho event đi theo bộ và lấy thông tin sự kiện).
 		""")
 @SecurityRequirement(name = "bearerAuth")
 public class EventController {
@@ -120,17 +120,16 @@ public class EventController {
 	}
 
 	@PostMapping
-	@io.swagger.v3.oas.annotations.Operation(
+	@Operation(
 		summary = "Tạo sự kiện mới",
 		description = """
-				API này cho phép tạo một sự kiện mới.
+				API này cho phép tạo một sự kiện đơn mới.
 				Người tạo sự kiện sẽ được thể hiện ở trên host
 				Trạng thái của sự kiện khi tạo chỉ được phép là PENDING hoặc ARCHIVED.
-				Trường trainingId chỉ áp dụng khi tạo sự kiện loại TRAINING.
 				Người tạo sự kiện phải có vai trò là member trở lên.
 			""")
 	public ResponseEntity<EventDetailResponseDto> createEvent(
-		@RequestBody @Valid EventCreateRequestDto dto
+		@RequestBody @Valid SingleEventCreateRequestDto dto
 	) {
 		EventDetailResponseDto createdEvent = eventService.createEvent(dto);
 		return ResponseEntity.ok(createdEvent);
@@ -151,12 +150,14 @@ public class EventController {
 			required = false,
 			defaultValue = "ALL") EventSearchType eventType,
 		@RequestParam(required = false) Boolean isDone,
-		@DateTimeFormat(
-			iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
-
+		@Schema(
+			description = "Thời gian bắt đầu để lọc sự kiện (ISO format)",
+			example = "2026-01-01T00:00:00")
+		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+		@RequestParam(required = false) LocalDateTime startTime,
 		@Schema(
 			description = "Thời gian kết thúc để lọc sự kiện (ISO format)",
-			example = "2025-12-31T23:59:59")
+			example = "2026-12-31T23:59:59")
 		@RequestParam(required = false)
 		@DateTimeFormat(
 			iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
@@ -195,13 +196,14 @@ public class EventController {
 		return ResponseEntity.ok(new EventCodeResponseDto(code));
 	}
 
-	@PostMapping("/self-trigger-register")
+	@PostMapping("/{eventId}/self-trigger-register")
 	@Operation(summary = "Cá nhân tự đăng ký sự kiện", description = """
 		Người dùng tự đăng ký cho sự kiện công khai
 		Nếu người dùng đã đăng ký sự kiện, hệ thống sẽ thay đổi sang hủy đăng ký
+		Chỉ được phép đăng ký cho các sự kiện đơn
 		""")
 	public ResponseEntity<Void> selfRegisterEvent(
-		@RequestParam String eventId,
+		@PathVariable String eventId,
 		HttpServletRequest httpServletRequest
 	) {
 		eventService.selfTriggerRegisterEvent(eventId);
@@ -365,7 +367,7 @@ public class EventController {
 		HttpServletRequest httpServletRequest
 	) {
 		EventDetailResponseDto modifiedEvent = eventService
-			.updateSingleEvent(eventId, dto,
+			.updateEvent(eventId, dto,
 				jwtT.getUserIdFromRequest(httpServletRequest));
 		return ResponseEntity.ok(modifiedEvent);
 	}

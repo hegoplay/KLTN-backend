@@ -2,6 +2,8 @@ package iuh.fit.se.services.user_service.serviceImpl;
 
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -141,12 +143,24 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public User getUserByKeyword(String keyword) {
-		User user = userRepository.findByUsernameOrEmail(keyword, keyword)
+		User user = userRepository
+			.findByUsernameOrEmail(keyword, keyword)
 			.orElse(null);
 		if (user == null) {
 			user = userRepository.findById(keyword).orElse(null);
 		}
 		return user;
+	}
+
+	@Override
+	public Page<User> searchUsers(String keyword, Pageable pageable) {
+		if (keyword == null || keyword.isBlank()) {
+			return userRepository.findAll(pageable);
+		} else {
+			return userRepository
+				.findByUsernameContainingIgnoreCaseOrFullNameContainingIgnoreCaseOrId(
+					keyword, keyword, keyword, pageable);
+		}
 	}
 
 }

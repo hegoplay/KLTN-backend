@@ -74,8 +74,8 @@ public class EventLeaderController {
 			required = false,
 			defaultValue = "ALL") EventSearchType eventType,
 		@RequestParam(required = false) Boolean isDone,
-		@DateTimeFormat(
-			iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+		@RequestParam(required = false) LocalDateTime startTime,
 
 		@Schema(
 			description = "Thời gian kết thúc để lọc sự kiện (ISO format)",
@@ -89,7 +89,8 @@ public class EventLeaderController {
 		@RequestParam FunctionStatus status
 	) {
 		EventSearchRequestDto request = new EventSearchRequestDto(keyword,
-			eventType, isDone,startTime, endTime, page, size, PageableUtil.parseSort(sort));
+			eventType, isDone, startTime, endTime, page, size,
+			PageableUtil.parseSort(sort));
 
 		Page<Event> events = eventService.searchAllEvents(request, status);
 		return ResponseEntity
@@ -134,7 +135,8 @@ public class EventLeaderController {
 		@RequestParam FunctionStatus status
 	) {
 		EventSearchRequestDto request = new EventSearchRequestDto(keyword,
-			eventType, isDone,startTime, endTime, page, size, PageableUtil.parseSort(sort));
+			eventType, isDone, startTime, endTime, page, size,
+			PageableUtil.parseSort(sort));
 
 		Page<Event> events = eventService
 			.searchUserEvents(request, null, status);
@@ -175,13 +177,14 @@ public class EventLeaderController {
 			- request: Đối tượng chứa trạng thái mới của sự kiện.
 			Các trạng thái hợp lệ bao gồm: PENDING, ARCHIVED, ACCEPTED, REJECTED, DISABLED.
 			Chỉ được phép cập nhật khi sự kiện chưa hoàn thành (done = false).
+			API chỉ áp dụng cho event đơn lẻ, không áp dụng cho sự kiện thuộc khóa học.
 			""")
 	@PatchMapping("/{eventId}/status")
 	public ResponseEntity<Void> updateEventStatus(
 		@RequestParam String eventId,
 		@RequestBody EventStatusUpdateRequestDto request
 	) {
-		eventService.updateEventStatus(eventId, request.status());
+		eventService.updateSingleEventStatus(eventId, request.status());
 		return ResponseEntity.accepted().build();
 	}
 
