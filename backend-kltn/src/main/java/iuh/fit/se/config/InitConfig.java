@@ -32,17 +32,14 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(makeFinal = true, level = lombok.AccessLevel.PRIVATE)
 @Slf4j
 public class InitConfig {
-	
-	
+
 	PasswordEncoder passwordEncoder;
 
 	@Bean
 	@Transactional
-	CommandLineRunner initDemoUser(
-		UserRepository userRepository,
+	CommandLineRunner initDemoUser(UserRepository userRepository,
 		EventRepository eventRepository,
-		GlobalConfigurationRepository globalConfigurationRepo
-	) {
+		GlobalConfigurationRepository globalConfigurationRepo) {
 		return args -> {
 			// Kiểm tra xem user demo đã tồn tại chưa
 			if (userRepository.findByUsername("admin").isEmpty()) {

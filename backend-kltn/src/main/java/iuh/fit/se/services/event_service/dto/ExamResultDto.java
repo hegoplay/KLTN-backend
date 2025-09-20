@@ -13,8 +13,6 @@ import lombok.experimental.FieldDefaults;
 @Schema(
 	description = "DTO dùng để trả về thông tin kết quả thi của người tham dự sự kiện")
 public class ExamResultDto {
-	@Schema(description = "Mã định danh của kết quả thi", example = "uuid")
-	String id;
 	@Schema(
 		description = "Thông tin ngắn gọn của thí sinh",
 		requiredMode = Schema.RequiredMode.REQUIRED)

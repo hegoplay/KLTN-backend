@@ -1,19 +1,13 @@
 package iuh.fit.se.services.user_service.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import iuh.fit.se.entity.User;
-import iuh.fit.se.services.user_service.dto.UserInfoResponseDto;
-import iuh.fit.se.services.user_service.mapper.UserMapper;
 import iuh.fit.se.services.user_service.service.UserService;
-import iuh.fit.se.util.JwtTokenUtil;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -31,9 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @SecurityRequirement(name = "bearerAuth")
 public class UserLeaderController {
 
-	JwtTokenUtil jwtTokenUtil;
 	UserService userService;
-	UserMapper userMapper;
 
 	@PostMapping("/reset-attendance-point")
 	@Operation(summary = "Reset attendance point for all users")

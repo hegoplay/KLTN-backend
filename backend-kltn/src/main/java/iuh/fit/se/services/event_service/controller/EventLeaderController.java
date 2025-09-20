@@ -120,8 +120,13 @@ public class EventLeaderController {
 			required = false,
 			defaultValue = "ALL") EventSearchType eventType,
 		@RequestParam(required = false) Boolean isDone,
+		@Schema(
+			description = "Thời gian kết thúc để lọc sự kiện (ISO format)",
+			example = "2024-00-00T23:59:59")
 		@DateTimeFormat(
-			iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+			iso = DateTimeFormat.ISO.DATE_TIME) 
+		@RequestParam(required = false)
+		LocalDateTime startTime,
 
 		@Schema(
 			description = "Thời gian kết thúc để lọc sự kiện (ISO format)",
@@ -188,4 +193,6 @@ public class EventLeaderController {
 		return ResponseEntity.accepted().build();
 	}
 
+	
+	
 }

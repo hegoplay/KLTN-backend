@@ -16,21 +16,23 @@ import iuh.fit.se.entity.Attendee;
 import iuh.fit.se.entity.Contest;
 import iuh.fit.se.entity.Event;
 import iuh.fit.se.entity.EventOrganizer;
+import iuh.fit.se.entity.ExamResult;
 import iuh.fit.se.entity.GlobalConfiguration;
 import iuh.fit.se.entity.Seminar;
-import iuh.fit.se.entity.TrainingEvent;
 import iuh.fit.se.entity.User;
 import iuh.fit.se.entity.enumerator.AttendeeStatus;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.entity.enumerator.OrganizerRole;
 import iuh.fit.se.entity.id_class.AttendeeId;
 import iuh.fit.se.entity.id_class.EventOrganizerId;
+import iuh.fit.se.entity.id_class.ExamResultId;
 import iuh.fit.se.errorHandler.NotFoundErrorHandler;
 import iuh.fit.se.repository.GlobalConfigurationRepository;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.enumerator.EventCategory;
 import iuh.fit.se.services.event_service.dto.enumerator.EventSearchType;
 import iuh.fit.se.services.event_service.dto.request.BaseEventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.ContestExamResultUpdateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventOrganizerSingleRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventSearchRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
@@ -43,6 +45,7 @@ import iuh.fit.se.services.event_service.patterns.factoryPattern.TrainingEventFa
 import iuh.fit.se.services.event_service.repository.EventAttendeeRepository;
 import iuh.fit.se.services.event_service.repository.EventOrganizerRepository;
 import iuh.fit.se.services.event_service.repository.EventRepository;
+import iuh.fit.se.services.event_service.repository.ExamResultRepository;
 import iuh.fit.se.services.event_service.service.EventCodeService;
 import iuh.fit.se.services.event_service.service.EventService;
 import iuh.fit.se.services.event_service.specification.EventSpecification;
@@ -51,6 +54,8 @@ import iuh.fit.se.services.user_service.repository.UserRepository;
 import iuh.fit.se.services.user_service.service.UserService;
 import iuh.fit.se.util.ContextUtil;
 import iuh.fit.se.util.TokenContextUtil;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -72,10 +77,14 @@ public class EventServiceImpl implements EventService {
 	EventOrganizerRepository eventOrganizerRepository;
 	EventAttendeeRepository eventAttendeeRepository;
 	TrainingRepository trainingRepository;
+	ExamResultRepository examResultRepository;
 
 	GlobalConfigurationRepository globalConfigurationRepository;
 
 	TokenContextUtil tokenContextUtil;
+
+	@PersistenceContext
+	private EntityManager entityManager;
 
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('MEMBER') or hasRole('LEADER')")
@@ -129,11 +138,8 @@ public class EventServiceImpl implements EventService {
 
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER')")
-	public Page<Event> searchUserEvents(
-		EventSearchRequestDto request,
-		String userId,
-		FunctionStatus status
-	) {
+	public Page<Event> searchUserEvents(EventSearchRequestDto request,
+		String userId, FunctionStatus status) {
 
 		Specification<Event> spec = Specification.unrestricted();
 
@@ -144,10 +150,8 @@ public class EventServiceImpl implements EventService {
 
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER')")
-	public Page<Event> searchAllEvents(
-		EventSearchRequestDto request,
-		FunctionStatus status
-	) {
+	public Page<Event> searchAllEvents(EventSearchRequestDto request,
+		FunctionStatus status) {
 		Specification<Event> spec = Specification.unrestricted();
 
 		// Filter by status
@@ -160,11 +164,8 @@ public class EventServiceImpl implements EventService {
 
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('MEMBER') or hasRole('LEADER')")
-	public Page<Event> searchMyEvents(
-		EventSearchRequestDto request,
-		FunctionStatus status,
-		String userId
-	) {
+	public Page<Event> searchMyEvents(EventSearchRequestDto request,
+		FunctionStatus status, String userId) {
 
 		String currentUsername = ContextUtil.getCurrentUsername();
 
@@ -197,10 +198,8 @@ public class EventServiceImpl implements EventService {
 
 	@Override
 	@Transactional
-	public EventDetailResponseDto getEventByIdAndUserId(
-		String eventId,
-		String userId
-	) {
+	public EventDetailResponseDto getEventByIdAndUserId(String eventId,
+		String userId) {
 
 		Event event = eventRepository
 			.findByIdAndFetchAttendees(eventId)
@@ -233,10 +232,8 @@ public class EventServiceImpl implements EventService {
 		return dto;
 	}
 
-	private Page<Event> searchEvents(
-		Specification<Event> spec,
-		EventSearchRequestDto request
-	) {
+	private Page<Event> searchEvents(Specification<Event> spec,
+		EventSearchRequestDto request) {
 
 		// Keyword search (title hoặc content)
 		if (request.keyword() != null && !request.keyword().isEmpty()) {
@@ -296,10 +293,8 @@ public class EventServiceImpl implements EventService {
 	}
 
 	@Override
-	public void updateEventStatusWithoutSaving(
-		Event event,
-		FunctionStatus status
-	) {
+	public void updateEventStatusWithoutSaving(Event event,
+		FunctionStatus status) {
 		if (event.isDone()) {
 			throw new IllegalStateException(
 				"Cannot change status of an event that is already done");
@@ -317,6 +312,68 @@ public class EventServiceImpl implements EventService {
 		// }
 		log.debug("Event {} status updated to {}", event.getId(), status);
 		event.setStatus(status);
+
+	}
+
+	@Override
+	@Transactional
+	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
+	public void updateContestStanding(String eventId,
+		ContestExamResultUpdateRequestDto dto) {
+		// TODO: hàm này tìm kiếm và cập nhật thứ hạng của 1 contest
+		String userId = tokenContextUtil.getUserId();
+
+		Event event = eventRepository
+			.findByIdAndFetchAttendees(eventId)
+			.orElseThrow(() -> new NotFoundErrorHandler(
+				"Event with ID " + eventId + " does not exist"));
+		// Kiểm tra các trạng thái
+		if (!(event instanceof Contest contest)) {
+			throw new IllegalArgumentException(
+				"Event with ID " + eventId + " is not a contest");
+		}
+		if (contest.getStatus() != FunctionStatus.ACCEPTED) {
+			throw new IllegalStateException(
+				"Cannot update standings for a contest that is not ACCEPTED");
+		}
+		if (contest.isDone()) {
+			throw new IllegalStateException(
+				"Cannot update standings for a contest that is done");
+		}
+		if (contest.getHost().getId().equalsIgnoreCase(userId) == false
+			&& tokenContextUtil.getRole().isLeaderOrHigher() == false) {
+			throw new SecurityException(
+				"Only the host or leader can update standings for this contest");
+		}
+		// Update thứ hạng
+		List<ExamResult> examResult = examResultRepository
+			.findAllByContest(contest);
+		examResultRepository.deleteAll(examResult);
+		List<ExamResult> newResults = new ArrayList<>();
+		for (var examResultDto : dto.getExamResults()) {
+			Attendee attendee = event
+				.getAttendeesMap()
+				.get(examResultDto.studentId());
+			if (attendee == null) {
+				throw new IllegalArgumentException(
+					"Student with ID " + examResultDto.studentId()
+						+ " is not an attendee of contest " + eventId);
+			}
+			var examResultEntity = ExamResult
+				.builder()
+				.contest(contest)
+				.student(attendee.getUser())
+				.point(examResultDto.point())
+				.rank(examResultDto.rank())
+				.examResultId(ExamResultId
+					.builder()
+					.contestId(contest.getId())
+					.studentId(examResultDto.studentId())
+					.build())
+				.build();
+			newResults.add(examResultEntity);
+		}
+		examResultRepository.saveAll(newResults);
 
 	}
 
@@ -362,9 +419,9 @@ public class EventServiceImpl implements EventService {
 		} else {
 			event.setDone(true);
 			if (event instanceof Contest contest) {
-				updateContestUsersScore(contest, 1);
+				updateContestUsersScore(contest, event.getMultiple());
 			} else {
-				updateEventUsersScore(event, 1);
+				updateEventUsersScore(event, event.getMultiple());
 			}
 		}
 		event.setDoneTime(java.time.LocalDateTime.now());
@@ -573,10 +630,8 @@ public class EventServiceImpl implements EventService {
 	@Override
 	@Transactional
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
-	public void manualTriggerRegisterEvent(
-		String eventId,
-		List<String> attendeesIds
-	) {
+	public void manualTriggerRegisterEvent(String eventId,
+		List<String> attendeesIds) {
 		String currentUserId = tokenContextUtil.getUserId();
 		Event event = eventRepository
 			.findById(eventId)
@@ -593,10 +648,8 @@ public class EventServiceImpl implements EventService {
 	@Override
 	@Transactional
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
-	public Event updateEventOrganizers(
-		String eventId,
-		List<EventOrganizerSingleRequestDto> organizerRequests
-	) {
+	public Event updateEventOrganizers(String eventId,
+		List<EventOrganizerSingleRequestDto> organizerRequests) {
 		// kiểm tra trong list chỉ được có 1 id
 		Set<String> ids = new HashSet<>();
 		organizerRequests.forEach(req -> {
@@ -646,11 +699,8 @@ public class EventServiceImpl implements EventService {
 	}
 
 	// hàm này để rút gọn các đoạn kiểm tra role của user hiện tại
-	private boolean checkEventRole(
-		Event event,
-		String userId,
-		OrganizerRole role
-	) {
+	private boolean checkEventRole(Event event, String userId,
+		OrganizerRole role) {
 		log
 			.info("current user id: {}, host id: {}", userId,
 				event.getHost().getId());
@@ -691,17 +741,35 @@ public class EventServiceImpl implements EventService {
 				"Only the host, organizers, or leader can view organizers for this event");
 		}
 
-		return eventOrganizerRepository.findByEventId(eventId);
+		return eventOrganizerRepository.findAllByEventId(eventId);
+	}
+	
+	@Override
+	public List<String> getReviewsForSeminarEvent(String eventId,
+		String getterId) {
+		
+		Event event = eventRepository
+			.findById(eventId)
+			.orElseThrow(() -> new NotFoundErrorHandler(
+				"Event with ID " + eventId + " does not exist"));
+		if (!(event instanceof Seminar seminar)) {
+			throw new IllegalArgumentException(
+				"Event with ID " + eventId + " is not a seminar");
+		}
+		// Check if the current user is the host or leader
+		if (!seminar.getHost().getId().equalsIgnoreCase(getterId) && !ContextUtil.isLeader()) {
+			throw new SecurityException(
+				"Only the host or leader can view reviews for this seminar");
+		}
+		return seminar.getReviews();
+			
 	}
 
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
 	@Transactional
-	public void triggerBan(
-		String eventId,
-		List<String> attendeesId,
-		String currentUserId
-	) {
+	public void triggerBan(String eventId, List<String> attendeesId,
+		String currentUserId) {
 
 		Event event = eventRepository
 			.findById(eventId)
@@ -740,11 +808,8 @@ public class EventServiceImpl implements EventService {
 
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
-	public EventDetailResponseDto updateEvent(
-		String eventId,
-		EventUpdateRequestDto dto,
-		String currentUserId
-	) {
+	public EventDetailResponseDto updateEvent(String eventId,
+		EventUpdateRequestDto dto, String currentUserId) {
 
 		Event event = eventRepository
 			.findById(eventId)
@@ -772,6 +837,28 @@ public class EventServiceImpl implements EventService {
 			default -> throw new IllegalArgumentException(
 				"Unsupported event type: " + dto.getCategory());
 		};
+	}
+
+	@Override
+	@PreAuthorize("hasRole('MEMBER') or hasRole('ADMIN') or hasRole('LEADER')")
+	public void addReviewForSeminarEvent(String eventId, String userId,
+		String reviewContent) {
+		Event event = eventRepository
+			.findById(eventId)
+			.orElseThrow(() -> new NotFoundErrorHandler(
+				"Event with ID " + eventId + " does not exist"));
+		if (!(event instanceof Seminar seminar)) {
+			throw new IllegalArgumentException(
+				"Event with ID " + eventId + " is not a seminar");
+		}
+		
+		Attendee attendee = event.getAttendeeByUserId(userId);
+		if (attendee == null || attendee.getStatus() != AttendeeStatus.CHECKED) {
+			throw new IllegalStateException(
+				"Chỉ có những ngươi tham gia sự kiện và đã điểm danh mới được đánh giá");
+		}
+		seminar.addReview(reviewContent);
+		eventRepository.save(seminar);
 	}
 
 	// private EventFactory getFactory(Event event) {

@@ -41,6 +41,4 @@ public class EventDetailResponseDto extends EventWrapperDto {
 	// training event serving fields
 	String trainingId;
 
-	// seminar serving fields
-	List<String> reviews;
 }

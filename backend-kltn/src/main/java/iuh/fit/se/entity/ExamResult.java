@@ -1,13 +1,13 @@
 package iuh.fit.se.entity;
 
+import iuh.fit.se.entity.id_class.ExamResultId;
 import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,24 +15,24 @@ import lombok.experimental.FieldDefaults;
 
 @Data
 @Entity
-@Table(name = "exam_results", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "contest_id"}))
+@Table(name = "exam_results")
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @lombok.Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExamResult {
 
-	@Id
-	@Column(name = "exam_result_id")
-	@GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
-	String id;
+	@EmbeddedId
+	ExamResultId examResultId;
 
 	@ManyToOne
-	@JoinColumn(name = "user_id")
+	@MapsId("studentId") // Maps the studentId attribute of embedded id
+	@JoinColumn(name = "student_id", insertable = false, updatable = false)
 	User student;
 
 	@ManyToOne
-	@JoinColumn(name = "contest_id")
+	@JoinColumn(name = "contest_id", insertable = false, updatable = false)
+	@MapsId("contestId") // Maps the contestId attribute of embedded id
 	Contest contest;
 	@Column(name = "ranking")
 	Integer rank;

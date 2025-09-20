@@ -17,7 +17,6 @@ import iuh.fit.se.services.event_service.dto.request.SingleEventCreateRequestDto
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import iuh.fit.se.services.training_service.repository.TrainingRepository;
 import iuh.fit.se.services.user_service.repository.UserRepository;
-import iuh.fit.se.services.user_service.service.UserService;
 import iuh.fit.se.util.TimeCheckUtil;
 import lombok.extern.slf4j.Slf4j;
 

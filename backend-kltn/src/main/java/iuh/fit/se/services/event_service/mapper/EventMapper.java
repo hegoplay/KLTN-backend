@@ -11,16 +11,14 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 import iuh.fit.se.entity.Contest;
 import iuh.fit.se.entity.Event;
 import iuh.fit.se.entity.Seminar;
-import iuh.fit.se.entity.Training;
 import iuh.fit.se.entity.TrainingEvent;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.EventWrapperDto;
 import iuh.fit.se.services.event_service.dto.enumerator.EventCategory;
 import iuh.fit.se.services.event_service.dto.enumerator.EventTimeStatus;
-import iuh.fit.se.services.event_service.dto.request.BaseEventCreateRequestDto;
-import iuh.fit.se.services.event_service.dto.request.TrainingEventCreateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.SingleEventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.TrainingEventCreateRequestDto;
 import iuh.fit.se.services.user_service.mapper.UserMapper;
 
 @Mapper(

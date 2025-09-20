@@ -10,5 +10,5 @@ import iuh.fit.se.entity.id_class.EventOrganizerId;
 
 @Repository
 public interface EventOrganizerRepository extends JpaRepository<EventOrganizer, EventOrganizerId>{
-	List<EventOrganizer> findByEventId(String eventId);
+	List<EventOrganizer> findAllByEventId(String eventId);
 }

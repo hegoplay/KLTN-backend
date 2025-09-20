@@ -34,10 +34,17 @@ public class Seminar extends Event{
         
     )
     @Column(name = "review", length = 1000) // Tên column và độ dài
-	List<String> reviews = List.of();
+	List<String> reviews = new java.util.ArrayList<>();
 
 	@Override
 	public boolean isSingleTable() {
 		return true;
+	}
+	
+	public void addReview(String review) {
+		this.reviews.add(review);
+	}
+	public void removeReview(String review) {
+		this.reviews.remove(review);
 	}
 }

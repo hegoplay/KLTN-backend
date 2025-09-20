@@ -28,6 +28,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import iuh.fit.se.api.EventAPI;
 import iuh.fit.se.entity.Attendee;
 import iuh.fit.se.entity.Event;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
@@ -37,12 +38,14 @@ import iuh.fit.se.services.event_service.dto.EventOrganizerDto;
 import iuh.fit.se.services.event_service.dto.EventWrapperDto;
 import iuh.fit.se.services.event_service.dto.enumerator.EventSearchType;
 import iuh.fit.se.services.event_service.dto.request.CheckInRequestDto;
+import iuh.fit.se.services.event_service.dto.request.ContestExamResultUpdateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventSearchRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.ListEventOrganizerRequestDto;
 import iuh.fit.se.services.event_service.dto.request.ManualTriggerRequestDto;
 import iuh.fit.se.services.event_service.dto.request.SingleEventCreateRequestDto;
 import iuh.fit.se.services.event_service.dto.response.EventCodeResponseDto;
+import iuh.fit.se.services.event_service.dto.response.SeminarReviewsResponseDto;
 import iuh.fit.se.services.event_service.mapper.EventAttendeeMapper;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import iuh.fit.se.services.event_service.mapper.EventOrganizerMapper;
@@ -59,7 +62,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/api/events")
+@RequestMapping(EventAPI.BASE_URL)
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @Slf4j
@@ -135,7 +138,7 @@ public class EventController {
 		return ResponseEntity.ok(createdEvent);
 	}
 
-	@GetMapping("/me/search")
+	@GetMapping(EventAPI.ME_SEARCH)
 	@Operation(
 		summary = "Tìm kiếm sự kiện của người dùng hiện tại",
 		description = """
@@ -254,7 +257,7 @@ public class EventController {
 		Danh sách attendeeIds có thể chứa trùng lặp, hệ thống sẽ tự loại bỏ
 		Nếu người dùng đã đăng ký sự kiện, hệ thống sẽ thay đổi sang hủy đăng ký
 		""")
-	@PostMapping("/{eventId}/manual-trigger-register")
+	@PostMapping(EventAPI.ID_MANUAL_TRIGGER_REGISTER)
 	public ResponseEntity<Void> registerEvent(
 		@PathVariable String eventId,
 		@RequestBody @Valid ManualTriggerRequestDto request
@@ -371,5 +374,38 @@ public class EventController {
 				jwtT.getUserIdFromRequest(httpServletRequest));
 		return ResponseEntity.ok(modifiedEvent);
 	}
+	@PutMapping(EventAPI.CONTEST_ID_UPDATE_STANDING)
+	public ResponseEntity<Void> updateEventStanding(
+		@PathVariable String eventId,
+		@RequestBody @Valid ContestExamResultUpdateRequestDto dto,
+		HttpServletRequest httpServletRequest
+	) {
+		eventService
+			.updateContestStanding(eventId, dto);
+		return ResponseEntity.accepted().build();
+	}
+	
+	@PostMapping(EventAPI.SEMINAR_ID_ADD_REVIEW)
+	public ResponseEntity<Void> addReviewForSeminarEvent(
+		@PathVariable String eventId,
+		@RequestBody String reviewContent,
+		HttpServletRequest httpServletRequest
+	) {
+		String tokenFromRequest = jwtT.getTokenFromRequest(httpServletRequest);
+		String userId = jwtT.getUserIdFromToken(tokenFromRequest);
+		eventService.addReviewForSeminarEvent(eventId, userId, reviewContent);
+		return ResponseEntity.ok().build();
+	}
 
+	@GetMapping(EventAPI.SEMINAR_ID_GET_REVIEWS)
+	public ResponseEntity<SeminarReviewsResponseDto> getReviewsForSeminarEvent(
+		@PathVariable String eventId,
+		HttpServletRequest httpServletRequest
+	) {
+		String tokenFromRequest = jwtT.getTokenFromRequest(httpServletRequest);
+		String userId = jwtT.getUserIdFromToken(tokenFromRequest);
+		List<String> reviews = eventService.getReviewsForSeminarEvent(eventId, userId);
+		return ResponseEntity.ok(new SeminarReviewsResponseDto(reviews));
+	}
+	
 }

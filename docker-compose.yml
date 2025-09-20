@@ -4,7 +4,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ./db-volume/redis-data:/data
+      - redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -25,7 +25,7 @@ services:
       MYSQL_PASSWORD: password
       
     volumes:
-      - ./db-volume/mysql-data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql:rw
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=root"]
       interval: 2s
@@ -62,6 +62,12 @@ services:
       start_period: 10s
     networks:
       - kltn-network
+
+volumes:
+  redis-data:
+    driver: local
+  mysql-data:
+    driver: local
 
 networks:
   kltn-network:

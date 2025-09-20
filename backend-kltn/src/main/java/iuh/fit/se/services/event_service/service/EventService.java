@@ -10,9 +10,10 @@ import iuh.fit.se.entity.EventOrganizer;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.request.BaseEventCreateRequestDto;
-import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.ContestExamResultUpdateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventOrganizerSingleRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventSearchRequestDto;
+import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
 
 public interface EventService {
 	EventDetailResponseDto createEvent(BaseEventCreateRequestDto dto);
@@ -21,22 +22,14 @@ public interface EventService {
 
 	Page<Event> searchPublicEvents(EventSearchRequestDto request);
 
-	Page<Event> searchUserEvents(
-		EventSearchRequestDto request,
-		String userId,
-		FunctionStatus status
-	);
+	Page<Event> searchUserEvents(EventSearchRequestDto request, String userId,
+		FunctionStatus status);
 
-	Page<Event> searchAllEvents(
-		EventSearchRequestDto request,
-		FunctionStatus status
-	);
+	Page<Event> searchAllEvents(EventSearchRequestDto request,
+		FunctionStatus status);
 
-	Page<Event> searchMyEvents(
-		EventSearchRequestDto request,
-		FunctionStatus status,
-		String userId
-	);
+	Page<Event> searchMyEvents(EventSearchRequestDto request,
+		FunctionStatus status, String userId);
 
 	EventDetailResponseDto getEventById(String eventId);
 
@@ -44,6 +37,8 @@ public interface EventService {
 
 	void updateSingleEventStatus(String eventId, FunctionStatus status);
 	void updateEventStatusWithoutSaving(Event event, FunctionStatus status);
+	void updateContestStanding(String eventId,
+		ContestExamResultUpdateRequestDto dto);
 
 	void triggerEventDone(String eventId);
 
@@ -52,11 +47,11 @@ public interface EventService {
 	void selfTriggerRegisterEvent(String eventId);
 
 	void manualTriggerRegisterEvent(String eventId, List<String> attendeeIds);
-	
+
 	void triggerRegisterEvent(Event e, String userId);
-	
+
 	Event registerEventWithoutSaving(Event e, String userId);
-	
+
 	Event unregisterEventWithoutSaving(Event e, String userId);
 
 	void selfCheckInEvent(String eventId, String userId, String otp);
@@ -64,12 +59,18 @@ public interface EventService {
 	void manualCheckInEvent(String eventId, List<String> attendeeIds);
 
 	Attendee checkInEventWithoutSaving(Event event, String userId);
-	
-	Event updateEventOrganizers(String eventId, List<EventOrganizerSingleRequestDto> organizerRequests);
-	
+
+	Event updateEventOrganizers(String eventId,
+		List<EventOrganizerSingleRequestDto> organizerRequests);
+
 	List<EventOrganizer> getEventOrganizers(String eventId);
+	List<String> getReviewsForSeminarEvent(String eventId, String getterId);
+
+	void triggerBan(String eventId, List<String> attendeesId,
+		String currentUserId);
+
+	EventDetailResponseDto updateEvent(String eventId,
+		EventUpdateRequestDto dto, String currentUserId);
 	
-	void triggerBan(String eventId, List<String> attendeesId, String currentUserId);
-	
-	EventDetailResponseDto updateEvent(String eventId, EventUpdateRequestDto dto, String currentUserId);
+	void addReviewForSeminarEvent(String eventId, String userId, String reviewContent);
 }
