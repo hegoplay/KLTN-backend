@@ -71,7 +71,7 @@ public class EventSpecification {
 			Join<Event, EventOrganizer> organizersJoin = root.join("organizers", JoinType.LEFT);			
 			
 			return criteriaBuilder
-			.equal(organizersJoin.get("organizerId"), organizerId);
+			.equal(organizersJoin.get("organizer").get("id"), organizerId);
 		};
 	}
 
