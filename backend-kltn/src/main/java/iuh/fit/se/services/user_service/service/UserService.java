@@ -5,6 +5,8 @@ import org.springframework.data.domain.Pageable;
 
 import iuh.fit.se.entity.User;
 import iuh.fit.se.services.user_service.dto.RegisterRequestDto;
+import iuh.fit.se.services.user_service.dto.UpdatePasswordRequestDto;
+import iuh.fit.se.services.user_service.dto.UserUpdateInfoRequestDto;
 
 public interface UserService {
 
@@ -17,7 +19,11 @@ public interface UserService {
 	User getUserByUsernameOrEmail(String usernameOrEmail);
 	User getCurrentUser();
 	User getUserByKeyword(String keyword);
+	User updateUserInfo(String userId, UserUpdateInfoRequestDto dto);
 
+	void updateMyPassword(String userId, UpdatePasswordRequestDto dto);
+	void updateUserPassword(User user, String newPassword);
+	
 	void resetAllAttendancePoint();
 	void resetAllContributionPoint();
 	

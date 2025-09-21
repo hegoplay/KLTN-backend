@@ -13,6 +13,8 @@ import iuh.fit.se.entity.GlobalConfiguration;
 import iuh.fit.se.entity.User;
 import iuh.fit.se.repository.GlobalConfigurationRepository;
 import iuh.fit.se.services.user_service.dto.RegisterRequestDto;
+import iuh.fit.se.services.user_service.dto.UpdatePasswordRequestDto;
+import iuh.fit.se.services.user_service.dto.UserUpdateInfoRequestDto;
 import iuh.fit.se.services.user_service.mapper.UserMapper;
 import iuh.fit.se.services.user_service.repository.UserRepository;
 import iuh.fit.se.services.user_service.service.UserService;
@@ -117,6 +119,32 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	public void updateMyPassword(String userId, UpdatePasswordRequestDto dto) {
+		User user = userRepository
+			.findById(userId)
+			.orElseThrow(() -> new RuntimeException(
+				"User not found with ID: " + userId));
+		if (!passwordEncoder
+			.matches(dto.getOldPassword(), user.getPassword())) {
+			throw new IllegalArgumentException("Old password is incorrect");
+		}
+		if (!dto.getNewPassword().equalsIgnoreCase(dto.getConfirmNewPassword())) {
+			throw new IllegalArgumentException(
+				"New password and confirm new password do not match");
+		}
+		updateUserPassword(user, dto.getNewPassword());
+	}
+
+	@Override
+	public void updateUserPassword(User user, String newPassword) {
+		if (user == null) {
+			throw new IllegalArgumentException("User cannot be null");
+		}
+		user.setPassword(passwordEncoder.encode(newPassword));
+		userRepository.save(user);
+	}
+
+	@Override
 	@Transactional
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER')")
 	public void resetAllAttendancePoint() {
@@ -150,6 +178,21 @@ public class UserServiceImpl implements UserService {
 			user = userRepository.findById(keyword).orElse(null);
 		}
 		return user;
+	}
+
+	@Override
+	public User updateUserInfo(String userId, UserUpdateInfoRequestDto dto) {
+
+		User user = userRepository
+			.findById(userId)
+			.orElseThrow(() -> new RuntimeException(
+				"User not found with ID: " + userId));
+
+		userMapper.mapToUser(dto, user);
+
+		User save = userRepository.save(user);
+
+		return save;
 	}
 
 	@Override

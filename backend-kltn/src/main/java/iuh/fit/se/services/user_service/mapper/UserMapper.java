@@ -7,8 +7,9 @@ import org.mapstruct.factory.Mappers;
 
 import iuh.fit.se.entity.User;
 import iuh.fit.se.services.user_service.dto.RegisterRequestDto;
-import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
 import iuh.fit.se.services.user_service.dto.UserInfoResponseDto;
+import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
+import iuh.fit.se.services.user_service.dto.UserUpdateInfoRequestDto;
 
 @Mapper(componentModel = "spring")
 public abstract class UserMapper {
@@ -25,4 +26,6 @@ public abstract class UserMapper {
 		String userUrl = "/api/users/" + user.getId();
 		dto.userUrl(userUrl);
     }
+	
+	public abstract void mapToUser(UserUpdateInfoRequestDto dto, @MappingTarget User user);
 }

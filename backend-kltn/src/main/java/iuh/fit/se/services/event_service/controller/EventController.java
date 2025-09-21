@@ -96,9 +96,7 @@ public class EventController {
 			Token được gọi là hợp lệ khi là host hoặc organizer của sự kiện hoặc có vai trò là leader.
 			""")
 	public ResponseEntity<EventDetailResponseDto> getEventById(
-		@PathVariable String eventId,
-		HttpServletRequest request
-	) {
+		@PathVariable String eventId, HttpServletRequest request) {
 		String tokenFromRequest = jwtT.getTokenFromRequest(request);
 		EventDetailResponseDto event;
 		if (tokenFromRequest == null) {
@@ -132,8 +130,7 @@ public class EventController {
 				Người tạo sự kiện phải có vai trò là member trở lên.
 			""")
 	public ResponseEntity<EventDetailResponseDto> createEvent(
-		@RequestBody @Valid SingleEventCreateRequestDto dto
-	) {
+		@RequestBody @Valid SingleEventCreateRequestDto dto) {
 		EventDetailResponseDto createdEvent = eventService.createEvent(dto);
 		return ResponseEntity.ok(createdEvent);
 	}
@@ -150,26 +147,23 @@ public class EventController {
 	public ResponseEntity<PagedModel<EntityModel<EventWrapperDto>>> getEventsByUser(
 		@RequestParam(required = false) String keyword,
 		@RequestParam(
-			required = false,
-			defaultValue = "ALL") EventSearchType eventType,
+			required = false, defaultValue = "ALL") EventSearchType eventType,
 		@RequestParam(required = false) Boolean isDone,
 		@Schema(
 			description = "Thời gian bắt đầu để lọc sự kiện (ISO format)",
-			example = "2026-01-01T00:00:00")
-		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-		@RequestParam(required = false) LocalDateTime startTime,
+			example = "2026-01-01T00:00:00") @DateTimeFormat(
+				iso = DateTimeFormat.ISO.DATE_TIME) @RequestParam(
+					required = false) LocalDateTime startTime,
 		@Schema(
 			description = "Thời gian kết thúc để lọc sự kiện (ISO format)",
-			example = "2026-12-31T23:59:59")
-		@RequestParam(required = false)
-		@DateTimeFormat(
-			iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
+			example = "2026-12-31T23:59:59") @RequestParam(
+				required = false) @DateTimeFormat(
+					iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
 		@RequestParam(defaultValue = "location.startTime,asc") String sort,
 		@RequestParam(required = false) FunctionStatus status,
-		HttpServletRequest httpServletRequest
-	) {
+		HttpServletRequest httpServletRequest) {
 		EventSearchRequestDto request = new EventSearchRequestDto(keyword,
 			eventType, isDone, startTime, endTime, page, size,
 			PageableUtil.parseSort(sort));
@@ -192,9 +186,7 @@ public class EventController {
 			""")
 	@GetMapping("/{eventId}/code")
 	public ResponseEntity<EventCodeResponseDto> getEventOTP(
-		@PathVariable String eventId,
-		HttpServletRequest httpServletRequest
-	) {
+		@PathVariable String eventId, HttpServletRequest httpServletRequest) {
 		String code = eventService.getEventCode(eventId);
 		return ResponseEntity.ok(new EventCodeResponseDto(code));
 	}
@@ -205,10 +197,8 @@ public class EventController {
 		Nếu người dùng đã đăng ký sự kiện, hệ thống sẽ thay đổi sang hủy đăng ký
 		Chỉ được phép đăng ký cho các sự kiện đơn
 		""")
-	public ResponseEntity<Void> selfRegisterEvent(
-		@PathVariable String eventId,
-		HttpServletRequest httpServletRequest
-	) {
+	public ResponseEntity<Void> selfRegisterEvent(@PathVariable String eventId,
+		HttpServletRequest httpServletRequest) {
 		eventService.selfTriggerRegisterEvent(eventId);
 		return ResponseEntity.ok().build();
 	}
@@ -221,11 +211,9 @@ public class EventController {
 			Mã xác nhận (code) do ban tổ chức tạo và có hiệu lực trong 10 phút kể từ thời điểm tạo
 			""")
 	@PostMapping("/{eventId}/self-check-in")
-	public ResponseEntity<Void> selfCheckInEvent(
-		@PathVariable String eventId,
+	public ResponseEntity<Void> selfCheckInEvent(@PathVariable String eventId,
 		@RequestBody @Valid CheckInRequestDto request,
-		HttpServletRequest httpServletRequest
-	) {
+		HttpServletRequest httpServletRequest) {
 		String tokenFromRequest = jwtT.getTokenFromRequest(httpServletRequest);
 		String userId = jwtT.getUserIdFromToken(tokenFromRequest);
 		eventService.selfCheckInEvent(eventId, userId, request.code());
@@ -240,10 +228,8 @@ public class EventController {
 			Hiện tại chức năng phục vụ check in 1 chiều (chỉ check in, không check out)
 			Danh sách attendeeIds có thể chứa trùng lặp, hệ thống sẽ tự loại bỏ
 			""")
-	public ResponseEntity<Void> checkInEvent(
-		@PathVariable String eventId,
-		@RequestBody @Valid ManualTriggerRequestDto request
-	) {
+	public ResponseEntity<Void> checkInEvent(@PathVariable String eventId,
+		@RequestBody @Valid ManualTriggerRequestDto request) {
 		Set<String> attendeeIds = new java.util.HashSet<>(
 			request.attendeeIds());
 		eventService
@@ -258,10 +244,8 @@ public class EventController {
 		Nếu người dùng đã đăng ký sự kiện, hệ thống sẽ thay đổi sang hủy đăng ký
 		""")
 	@PostMapping(EventAPI.ID_MANUAL_TRIGGER_REGISTER)
-	public ResponseEntity<Void> registerEvent(
-		@PathVariable String eventId,
-		@RequestBody @Valid ManualTriggerRequestDto request
-	) {
+	public ResponseEntity<Void> registerEvent(@PathVariable String eventId,
+		@RequestBody @Valid ManualTriggerRequestDto request) {
 		Map<String, Integer> report = new java.util.HashMap<>();
 		List<String> attendeeIds = new java.util.ArrayList<>();
 		request
@@ -288,8 +272,7 @@ public class EventController {
 		@PathVariable String eventId,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "100") int size,
-		@RequestParam(defaultValue = "user.fullName,asc") String sort
-	) {
+		@RequestParam(defaultValue = "user.fullName,asc") String sort) {
 		Sort sortObj = PageableUtil.parseSort(sort);
 		Pageable pageable = PageRequest.of(page, size, sortObj);
 		Page<Attendee> attendees = eventAttendeeService
@@ -307,8 +290,7 @@ public class EventController {
 			""")
 	@GetMapping("/{eventId}/organizers")
 	public ResponseEntity<List<EventOrganizerDto>> getEventOrganizers(
-		@PathVariable String eventId
-	) {
+		@PathVariable String eventId) {
 		List<EventOrganizerDto> list = eventService
 			.getEventOrganizers(eventId)
 			.stream()
@@ -328,8 +310,7 @@ public class EventController {
 	@PutMapping("/{eventId}/modify-organizers")
 	public ResponseEntity<EventDetailResponseDto> updateEventOrganizers(
 		@PathVariable String eventId,
-		@RequestBody @Valid ListEventOrganizerRequestDto organizerRequests
-	) {
+		@RequestBody @Valid ListEventOrganizerRequestDto organizerRequests) {
 		Event updateEventOrganizers = eventService
 			.updateEventOrganizers(eventId, organizerRequests.organizers());
 		return ResponseEntity
@@ -345,11 +326,9 @@ public class EventController {
 			Người thực hiện hành động này phải có vai trò là HOST organizer có quyền của sự kiện.
 			""")
 	@PostMapping("/{eventId}/trigger-ban-user")
-	public ResponseEntity<Void> triggerBanUser(
-		@PathVariable String eventId,
+	public ResponseEntity<Void> triggerBanUser(@PathVariable String eventId,
 		@RequestBody @Valid ManualTriggerRequestDto request,
-		HttpServletRequest httpServletRequest
-	) {
+		HttpServletRequest httpServletRequest) {
 		String userId = jwtT.getUserIdFromRequest(httpServletRequest);
 		eventService.triggerBan(eventId, request.attendeeIds(), userId);
 		return ResponseEntity.ok().build();
@@ -367,45 +346,64 @@ public class EventController {
 	public ResponseEntity<EventDetailResponseDto> modifyEvent(
 		@PathVariable String eventId,
 		@RequestBody @Valid EventUpdateRequestDto dto,
-		HttpServletRequest httpServletRequest
-	) {
+		HttpServletRequest httpServletRequest) {
 		EventDetailResponseDto modifiedEvent = eventService
 			.updateEvent(eventId, dto,
 				jwtT.getUserIdFromRequest(httpServletRequest));
 		return ResponseEntity.ok(modifiedEvent);
 	}
+
+	@Operation(
+		summary = "Cập nhật kết quả thi của thí sinh cho sự kiện cuộc thi",
+		description = """
+			API này cho phép cập nhật kết quả thi của thí sinh cho sự kiện có loại là CONTEST.
+			Người dùng phải là host sự kiện, ban tổ chức có quyền MODIFY, admin có quyền của sự kiện để sử dụng API này.
+			Trường hợp thí sinh chưa tham gia sự kiện, hệ thống sẽ báo lỗi và không thực hiện cập nhật.
+			""")
 	@PutMapping(EventAPI.CONTEST_ID_UPDATE_STANDING)
 	public ResponseEntity<Void> updateEventStanding(
 		@PathVariable String eventId,
 		@RequestBody @Valid ContestExamResultUpdateRequestDto dto,
-		HttpServletRequest httpServletRequest
-	) {
-		eventService
-			.updateContestStanding(eventId, dto);
+		HttpServletRequest httpServletRequest) {
+		eventService.updateContestStanding(eventId, dto);
 		return ResponseEntity.accepted().build();
 	}
-	
+
+	@Operation(
+		summary = "Thêm đánh giá cho sự kiện hội thảo",
+		description = """
+			API này cho phép người tham gia thêm đánh giá cho sự kiện có loại là SEMINAR.
+			Một người tham gia chỉ được phép đánh giá một lần cho mỗi sự kiện.
+			Nội dung đánh giá không được để trống và không vượt quá 500 ký tự.
+			Người dùng phải là người tham gia đã check-in thành công cho sự kiện để sử dụng API này.
+			""")
 	@PostMapping(EventAPI.SEMINAR_ID_ADD_REVIEW)
 	public ResponseEntity<Void> addReviewForSeminarEvent(
-		@PathVariable String eventId,
-		@RequestBody String reviewContent,
-		HttpServletRequest httpServletRequest
-	) {
+		@PathVariable String eventId, @RequestBody String reviewContent,
+		HttpServletRequest httpServletRequest) {
 		String tokenFromRequest = jwtT.getTokenFromRequest(httpServletRequest);
 		String userId = jwtT.getUserIdFromToken(tokenFromRequest);
 		eventService.addReviewForSeminarEvent(eventId, userId, reviewContent);
 		return ResponseEntity.ok().build();
 	}
 
+	@Operation(
+		summary = "Lấy danh sách đánh giá cho sự kiện hội thảo",
+		description = """
+			API này cho phép lấy danh sách đánh giá cho sự kiện có loại là SEMINAR.
+			Danh sách đánh giá chỉ bao gồm nội dung đánh giá, không bao gồm thông tin người đánh giá.
+			Người dùng phải là host sự kiện, admin có quyền của sự kiện để sử dụng API này.
+			
+			""")
+//	TODO: ban tổ chức có quyền VIEW
 	@GetMapping(EventAPI.SEMINAR_ID_GET_REVIEWS)
 	public ResponseEntity<SeminarReviewsResponseDto> getReviewsForSeminarEvent(
-		@PathVariable String eventId,
-		HttpServletRequest httpServletRequest
-	) {
+		@PathVariable String eventId, HttpServletRequest httpServletRequest) {
 		String tokenFromRequest = jwtT.getTokenFromRequest(httpServletRequest);
 		String userId = jwtT.getUserIdFromToken(tokenFromRequest);
-		List<String> reviews = eventService.getReviewsForSeminarEvent(eventId, userId);
+		List<String> reviews = eventService
+			.getReviewsForSeminarEvent(eventId, userId);
 		return ResponseEntity.ok(new SeminarReviewsResponseDto(reviews));
 	}
-	
+
 }

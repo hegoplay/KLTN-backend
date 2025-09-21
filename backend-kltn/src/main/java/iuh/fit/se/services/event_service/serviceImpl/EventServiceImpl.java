@@ -3,6 +3,7 @@ package iuh.fit.se.services.event_service.serviceImpl;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.domain.Page;
@@ -340,10 +341,22 @@ public class EventServiceImpl implements EventService {
 			throw new IllegalStateException(
 				"Cannot update standings for a contest that is done");
 		}
+		
+		Optional<EventOrganizer> eOrganizerById = eventOrganizerRepository.findById(EventOrganizerId
+			.builder()
+			.eventId(eventId)
+			.organizerId(userId)
+			.build());
+		boolean isOrganizerWithRole = eOrganizerById
+			.map(organizer -> organizer.getRoles().contains(OrganizerRole.MODIFY))
+			.orElse(false);
+		
 		if (contest.getHost().getId().equalsIgnoreCase(userId) == false
-			&& tokenContextUtil.getRole().isLeaderOrHigher() == false) {
+			&& tokenContextUtil.getRole().isLeaderOrHigher() == false
+			&& isOrganizerWithRole == false
+			) {
 			throw new SecurityException(
-				"Only the host or leader can update standings for this contest");
+				"Only the host or leader or organizer with MODIFY roles can update standings for this contest");
 		}
 		// Update thứ hạng
 		List<ExamResult> examResult = examResultRepository
