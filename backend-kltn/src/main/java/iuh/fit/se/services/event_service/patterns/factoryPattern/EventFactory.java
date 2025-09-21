@@ -9,6 +9,7 @@ import iuh.fit.se.entity.EventOrganizer;
 import iuh.fit.se.entity.Seminar;
 import iuh.fit.se.entity.User;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
+import iuh.fit.se.entity.id_class.EventOrganizerId;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.request.BaseEventCreateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventOrganizerSingleRequestDto;
@@ -24,21 +25,42 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class EventFactory {
 	// public
 
-	public Event createEvent(
-		BaseEventCreateRequestDto dto,
-		User host
-	) {
+	public Event createEvent(BaseEventCreateRequestDto dto, User host,
+		UserRepository userRepository) {
 
 		checkEventCreation(dto);
 
 		// Generate the event using the abstract method
 		Event e = generateEvent(dto);
+		dto.getOrganizers()
+			.forEach(req -> {
+				User organizerUser = userRepository
+					.findById(req.organizerId())
+					.orElseThrow(() -> new IllegalArgumentException(
+						"User with ID " + req.organizerId()
+							+ " does not exist"));
+				if (!organizerUser.isMember()) {
+					throw new IllegalArgumentException(
+						"User with ID " + req.organizerId()
+							+ " is not a member and cannot be an organizer");
+				}
+				EventOrganizer organizer = EventOrganizer.builder()
+					.id(new EventOrganizerId(
+				        organizerUser.getId(),  // organizerId từ User
+				        e.getId()               // eventId từ Event (có thể null nếu event chưa saved)
+				    ))
+					.event(e)
+					.organizer(organizerUser)
+					.roles(new HashSet<>(req.roles()))
+					.roleContent(req.roleContent())
+					.build();
+				e.addOrganizer(organizer);
+			});
 		if (dto.getMultiple() == null) {
 			e.setMultiple(1);
 		}
-		
-		e.setHost(host);
 
+		e.setHost(host);
 		return e;
 	}
 	public abstract EventDetailResponseDto toEventDetailResponseDto(Event e);
@@ -51,13 +73,14 @@ public abstract class EventFactory {
 		if (dto.status() == null) {
 			throw new IllegalArgumentException("Event status cannot be null");
 		}
-//		if (event.getSingle() != null && event.getSingle() == Boolean.FALSE) {
-//			// nếu là training event thì không được phép chỉnh sửa status
-//			if (dto.status() != event.getStatus()) {
-//				throw new IllegalArgumentException(
-//					"Cannot change status of training events");
-//			}
-//		}
+		// if (event.getSingle() != null && event.getSingle() == Boolean.FALSE)
+		// {
+		// // nếu là training event thì không được phép chỉnh sửa status
+		// if (dto.status() != event.getStatus()) {
+		// throw new IllegalArgumentException(
+		// "Cannot change status of training events");
+		// }
+		// }
 		if (!(dto.status() == FunctionStatus.PENDING
 			|| dto.status() == FunctionStatus.ARCHIVED)) {
 			throw new IllegalArgumentException(
@@ -71,25 +94,24 @@ public abstract class EventFactory {
 				throw new IllegalArgumentException(
 					"Thời gian bắt đầu phải sau ngày hôm nay");
 			}
-			if(dto.location().getEndTime() !=null && dto.location().getStartTime() != null) {
-				TimeCheckUtil.checkCreateObjectValid(dto.location().getStartTime(),
-					dto.location().getEndTime());
+			if (dto.location().getEndTime() != null
+				&& dto.location().getStartTime() != null) {
+				TimeCheckUtil
+					.checkCreateObjectValid(dto.location().getStartTime(),
+						dto.location().getEndTime());
+			} else if (dto.location().getEndTime() != null) {
+				TimeCheckUtil
+					.checkCreateObjectValid(event.getLocation().getStartTime(),
+						dto.location().getEndTime());
 			}
-			else if (dto.location().getEndTime() != null) {
-				TimeCheckUtil.checkCreateObjectValid(event.getLocation().getStartTime(),
-					dto.location().getEndTime());
-			}
-//			kiểm tra endTime > startTime
-			
+			// kiểm tra endTime > startTime
+
 		}
 		return handleUpdateEvent(event, dto);
 	}
 
-	public Event addOrUpdateOrganizerToEvent(
-		Event event,
-		EventOrganizerSingleRequestDto req,
-		UserRepository userRepository
-	) {
+	public Event addOrUpdateOrganizerToEvent(Event event,
+		EventOrganizerSingleRequestDto req, UserRepository userRepository) {
 		User organizerUser = userRepository
 			.findById(req.organizerId())
 			.orElseThrow(() -> new IllegalArgumentException(
@@ -116,18 +138,13 @@ public abstract class EventFactory {
 		return event;
 	}
 
-	protected abstract void addNewOrganizerToEvent(
-		Event event,
-		EventOrganizerSingleRequestDto req,
-		User organizerUser
-	);
+	protected abstract void addNewOrganizerToEvent(Event event,
+		EventOrganizerSingleRequestDto req, User organizerUser);
 
 	protected abstract Event generateEvent(BaseEventCreateRequestDto dto);
 
-	protected abstract Event handleUpdateEvent(
-		Event e,
-		EventUpdateRequestDto dto
-	);
+	protected abstract Event handleUpdateEvent(Event e,
+		EventUpdateRequestDto dto);
 
 	public static void checkEventCreation(BaseEventCreateRequestDto dto) {
 		if (dto instanceof SingleEventCreateRequestDto) {
@@ -152,11 +169,8 @@ public abstract class EventFactory {
 		}
 	}
 
-	public static EventFactory getFactory(
-		Event event,
-		EventMapper eventMapper,
-		TrainingRepository trainingRepository
-	) {
+	public static EventFactory getFactory(Event event, EventMapper eventMapper,
+		TrainingRepository trainingRepository) {
 		if (event instanceof Seminar) {
 			return new SeminarFactory(eventMapper);
 		} else if (event instanceof Contest) {

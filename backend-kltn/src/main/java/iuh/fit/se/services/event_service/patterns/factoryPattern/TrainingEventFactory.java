@@ -28,7 +28,7 @@ public class TrainingEventFactory extends EventFactory {
 	protected Event generateEvent(BaseEventCreateRequestDto dto) {
 
 		TrainingEventCreateRequestDto etDto = (TrainingEventCreateRequestDto) dto;
-		TrainingEvent seminar = eventMapper.toTrainingEvent(etDto);
+		TrainingEvent seminar = eventMapper.toTrainingEventIgnoreOrganizer(etDto);
 		if (etDto.getTrainingId() != null) {
 			seminar
 				.setTraining(
@@ -70,8 +70,6 @@ public class TrainingEventFactory extends EventFactory {
 		}
 		EventOrganizer organizer = EventOrganizer
 			.builder()
-			.organizerId(organizerUser.getId())
-			.eventId(event.getId())
 			.event(event)
 			.organizer(organizerUser)
 			.roles(req.roles() != null

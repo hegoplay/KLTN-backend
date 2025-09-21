@@ -30,7 +30,7 @@ public class ContestFactory extends EventFactory {
 				"Invalid DTO type for Closed Contest");
 		}
 		Contest contest = eventMapper
-			.toContest((SingleEventCreateRequestDto) dto);
+			.toContestIgnoreOrganizer((SingleEventCreateRequestDto) dto);
 		contest.setAbleToRegister(true);
 		if (contest.getStatus() == null) {
 			contest.setStatus(FunctionStatus.ARCHIVED);
@@ -79,8 +79,6 @@ public class ContestFactory extends EventFactory {
 	) {
 		EventOrganizer organizer = EventOrganizer
 			.builder()
-			.organizerId(organizerUser.getId())
-			.eventId(event.getId())
 			.event(event)
 			.organizer(organizerUser)
 			.roles(req.roles() != null

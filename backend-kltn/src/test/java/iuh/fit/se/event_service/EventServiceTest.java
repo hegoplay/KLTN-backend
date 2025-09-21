@@ -135,7 +135,7 @@ public class EventServiceTest {
 		when(eventRepository.save(any(Event.class))).thenReturn(mockSeminar);
 		when(eventMapper.toEventDetailResponseDto(any(Seminar.class)))
 			.thenReturn(expectedResponse);
-		when(eventMapper.toSeminar(seminarRequest)).thenReturn(mockSeminar);
+		when(eventMapper.toSeminarIgnoreOrganizer(seminarRequest)).thenReturn(mockSeminar);
 		when(userService.getCurrentUser()).thenReturn(User.builder().build()); // Mock
 																				// user
 																				// retrieval

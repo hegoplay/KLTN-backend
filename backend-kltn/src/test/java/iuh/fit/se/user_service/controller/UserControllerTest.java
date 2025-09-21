@@ -23,6 +23,7 @@ import iuh.fit.se.services.user_service.controller.AuthController;
 import iuh.fit.se.services.user_service.dto.LoginRequestDto;
 import iuh.fit.se.services.user_service.dto.LoginResponseDto;
 import iuh.fit.se.services.user_service.service.UserService;
+import iuh.fit.se.services.user_service.serviceImpl.TokenBlacklistService;
 import iuh.fit.se.util.JwtTokenUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,6 +48,9 @@ class UserControllerTest {
     
     @MockitoBean
     private JwtTokenUtil jwtTokenUtil;
+    
+    @MockitoBean
+    private TokenBlacklistService tokenBlacklistService;
     
     @Test
     void testLogin() throws Exception {

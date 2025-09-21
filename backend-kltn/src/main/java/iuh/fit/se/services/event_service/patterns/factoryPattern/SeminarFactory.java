@@ -31,7 +31,10 @@ public class SeminarFactory extends EventFactory {
 				"Invalid DTO type for Closed Contest");
 		}
 		Seminar seminar = eventMapper
-			.toSeminar((SingleEventCreateRequestDto) dto);
+			.toSeminarIgnoreOrganizer((SingleEventCreateRequestDto) dto);
+		
+		
+		
 		if (seminar.getStatus() == null) {
 			seminar.setStatus(FunctionStatus.ARCHIVED);
 		}
@@ -65,8 +68,6 @@ public class SeminarFactory extends EventFactory {
 	) {
 		EventOrganizer organizer = EventOrganizer
 			.builder()
-			.organizerId(organizerUser.getId())
-			.eventId(event.getId())
 			.event(event)
 			.organizer(organizerUser)
 			.roles(req.roles() != null

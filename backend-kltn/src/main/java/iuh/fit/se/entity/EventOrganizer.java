@@ -8,13 +8,15 @@ import iuh.fit.se.entity.id_class.EventOrganizerId;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -25,55 +27,49 @@ import lombok.experimental.FieldDefaults;
 
 @Data
 @Entity
-@Table(
-	name = "event_organizers",
-	uniqueConstraints = {@UniqueConstraint(
-		name = "uk_event_organizer_user_event",
-		columnNames = {"user_id", "event_id"})})
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-@lombok.Builder
+@Table(name = "event_organizers")
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@IdClass(EventOrganizerId.class) // Thêm IdClass
 public class EventOrganizer {
 
-	@Id
-	@Column(name = "organizer_id")
-	String organizerId;
+    @EmbeddedId
+    private EventOrganizerId id;
 
-	@Id
-	@Column(name = "event_id")
-	String eventId;
+    @MapsId("organizerId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organizer_id", nullable = false)
+    private User organizer;
 
-	@ManyToOne
-	@JoinColumn(name = "organizer_id", insertable = false, updatable = false)
-	User organizer;
+    @MapsId("eventId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id", nullable = false)
+    private Event event;
 
-	@ManyToOne
-	@JoinColumn(name = "event_id", insertable = false, updatable = false)
-	Event event;
-	String roleContent;
+    @Column(name = "role_content", length = 1000)
+    private String roleContent;
 
-	@ElementCollection
-	@Enumerated(EnumType.STRING) // Lưu dưới dạng chuỗi
-	@CollectionTable(
-		name = "organizer_roles",
-		joinColumns = {@JoinColumn(name = "organizer_id"),
-				@JoinColumn(name = "event_id")})
-	@Builder.Default
-	Set<OrganizerRole> roles = new HashSet<>();
+    @ElementCollection
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(
+        name = "organizer_roles",
+        joinColumns = {
+            @JoinColumn(name = "organizer_id", referencedColumnName = "organizer_id"),
+            @JoinColumn(name = "event_id", referencedColumnName = "event_id")
+        })
+    @Builder.Default
+    private Set<OrganizerRole> roles = new HashSet<>();
 
-	public void addRole(OrganizerRole role) {
-		if (this.roles == null) {
-			this.roles = new HashSet<>();
-		}
-		this.roles.add(role);
-	}
+    public void addRole(OrganizerRole role) {
+        if (this.roles == null) {
+            this.roles = new HashSet<>();
+        }
+        this.roles.add(role);
+    }
 
-	public void removeRole(OrganizerRole role) {
-		if (this.roles != null) {
-			this.roles.remove(role);
-		}
-	}
-
+    public void removeRole(OrganizerRole role) {
+        if (this.roles != null) {
+            this.roles.remove(role);
+        }
+    }
 }

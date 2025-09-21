@@ -28,16 +28,6 @@ public class PostServiceTest {
 	@WithMockUser(username = "hegoplay", roles = {"MEMBER"})
 	public void testWithUserRole() {
 
-		userService
-			.saveUser(User
-				.builder()
-				.username("hegoplay")
-				.password("password")
-				.role(UserRole.MEMBER)
-				.fullName("Hego Play")
-				.email("test@gmail.com")
-				.build());
-
 		PostRequestDto dto = new PostRequestDto("Test Post",
 			"This is a test post content.",
 			"converted_IUH-Logo_24x24.png_1755609775397",

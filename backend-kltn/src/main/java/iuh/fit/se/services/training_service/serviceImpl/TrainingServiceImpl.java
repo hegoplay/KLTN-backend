@@ -105,7 +105,8 @@ public class TrainingServiceImpl implements TrainingService {
 					TrainingEventCreateRequestDto
 						.fromBaseEventDto(eventDto, null),
 					userRepository
-						.getReferenceById(tokenContextUtil.getUserId()));
+						.getReferenceById(tokenContextUtil.getUserId()),
+					userRepository);
 			if (event instanceof TrainingEvent trainingEvent) {
 				training.addTrainingEvent(trainingEvent);
 			} else {
@@ -119,10 +120,8 @@ public class TrainingServiceImpl implements TrainingService {
 	}
 
 	@Override
-	public Page<TrainingWrapperDto> getMyTrainings(
-		TrainingSearchDto dto,
-		FunctionStatus status
-	) {
+	public Page<TrainingWrapperDto> getMyTrainings(TrainingSearchDto dto,
+		FunctionStatus status) {
 		Specification<Training> spec = Specification.unrestricted();
 
 		spec = spec
@@ -145,10 +144,8 @@ public class TrainingServiceImpl implements TrainingService {
 	}
 
 	@Override
-	public Page<TrainingWrapperDto> getAllTrainings(
-		TrainingSearchDto dto,
-		FunctionStatus status
-	) {
+	public Page<TrainingWrapperDto> getAllTrainings(TrainingSearchDto dto,
+		FunctionStatus status) {
 		Specification<Training> spec = Specification.unrestricted();
 
 		if (status != null)
@@ -189,9 +186,7 @@ public class TrainingServiceImpl implements TrainingService {
 
 	@Override
 	public Page<TrainingWrapperDto> searchTrainings(
-		Specification<Training> spec,
-		TrainingSearchDto dto
-	) {
+		Specification<Training> spec, TrainingSearchDto dto) {
 		if (dto.getKeyword() != null) {
 			spec = spec
 				.and(EntitySpecification
@@ -373,10 +368,8 @@ public class TrainingServiceImpl implements TrainingService {
 
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER')")
-	public void manualTriggerRegisterTraining(
-		String trainingId,
-		List<String> userIds
-	) {
+	public void manualTriggerRegisterTraining(String trainingId,
+		List<String> userIds) {
 
 		Training training = trainingRepository
 			.findByIdFetchParticipants(trainingId)
@@ -435,10 +428,8 @@ public class TrainingServiceImpl implements TrainingService {
 
 	@Override
 	@Transactional
-	public TrainingDetailDto insertTrainingEvents(
-		String trainingId,
-		TrainingEventListCreateRequestDto dto
-	) {
+	public TrainingDetailDto insertTrainingEvents(String trainingId,
+		TrainingEventListCreateRequestDto dto) {
 		// thực hiện việc thêm sự kiện vào trong khóa học và thêm thông
 		// tin của những người đã đăng ký vào trong khóa học,
 		// Lấy thông tin khóa học
@@ -475,8 +466,10 @@ public class TrainingServiceImpl implements TrainingService {
 			TrainingEventCreateRequestDto tEventDto = TrainingEventCreateRequestDto
 				.fromBaseEventDto(eventDto, trainingId);
 			Event event = factory
-				.createEvent(tEventDto, userRepository
-					.getReferenceById(tokenContextUtil.getUserId()));
+				.createEvent(tEventDto,
+					userRepository
+						.getReferenceById(tokenContextUtil.getUserId()),
+					userRepository);
 			if (event instanceof TrainingEvent trainingEvent) {
 				// thêm danh sách những người đã đăng ký vào trong sự kiện
 				trainingEvent.setAttendeesMap(attendees);
@@ -494,10 +487,8 @@ public class TrainingServiceImpl implements TrainingService {
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
 	@Transactional
-	public TrainingDetailDto updateWrapperInformation(
-		String trainingId,
-		TrainingPatchRequestDto dto
-	) {
+	public TrainingDetailDto updateWrapperInformation(String trainingId,
+		TrainingPatchRequestDto dto) {
 		// Viết hàm để update những thông tin cơ bản của khóa học
 		Training training = trainingRepository
 			.findById(trainingId)
@@ -546,11 +537,8 @@ public class TrainingServiceImpl implements TrainingService {
 
 	@Override
 	@Transactional
-	public void updateTrainingMentors(
-		String trainingId,
-		List<String> addingMentorIds,
-		List<String> removingMentorIds
-	) {
+	public void updateTrainingMentors(String trainingId,
+		List<String> addingMentorIds, List<String> removingMentorIds) {
 		Training training = trainingRepository
 			.findByIdFetchMentors(trainingId)
 			.orElseThrow(

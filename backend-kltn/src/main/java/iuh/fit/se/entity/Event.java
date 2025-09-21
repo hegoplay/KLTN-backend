@@ -8,6 +8,7 @@ import java.util.Map;
 
 import iuh.fit.se.entity.enumerator.AttendeeStatus;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
+import iuh.fit.se.entity.id_class.EventOrganizerId;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
@@ -135,6 +136,14 @@ public abstract class Event {
 			this.organizers = new ArrayList<>();
 		}
 		organizer.setEvent(this);
+	    organizer.setOrganizer(organizer.getOrganizer());
+	    if (organizer.getId() == null) {
+	        EventOrganizerId id = new EventOrganizerId(
+	            organizer.getOrganizer().getId(), 
+	            this.getId()
+	        );
+	        organizer.setId(id);
+	    }
 		this.organizers.add(organizer);
 	}
 

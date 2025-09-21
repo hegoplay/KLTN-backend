@@ -19,7 +19,6 @@ public abstract class EventOrganizerMapper {
     public EventOrganizer toEventOrganizer(EventRequestOrganizerDto dto) {
 //    	TODO: có thời gian sẽ đập đi xây lại do vi phạm nguyên tắc mapper chỉ để chuyển đổi
         return EventOrganizer.builder()
-            .organizerId(null)
             .organizer(userRepository
                 .findById(dto.organizerId())
                 .orElseThrow(() -> new NotFoundErrorHandler("user with id " + dto.organizerId() + " not found")))

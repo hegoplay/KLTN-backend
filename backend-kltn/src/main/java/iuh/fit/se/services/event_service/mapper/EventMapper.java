@@ -1,15 +1,18 @@
 package iuh.fit.se.services.event_service.mapper;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.mapstruct.AfterMapping;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import iuh.fit.se.entity.Contest;
 import iuh.fit.se.entity.Event;
+import iuh.fit.se.entity.EventOrganizer;
 import iuh.fit.se.entity.Seminar;
 import iuh.fit.se.entity.TrainingEvent;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
@@ -26,13 +29,23 @@ import iuh.fit.se.services.user_service.mapper.UserMapper;
 	uses = {EventOrganizerMapper.class, UserMapper.class})
 public abstract class EventMapper {
 
-	public abstract Seminar toSeminar(SingleEventCreateRequestDto dto);
-	public abstract Contest toContest(SingleEventCreateRequestDto dto);
-	// Add other event types as needed
+	@Mapping(target = "organizers", ignore = true)
+	public abstract Seminar toSeminarIgnoreOrganizer(SingleEventCreateRequestDto dto);
+
+	@Mapping(target = "organizers", ignore = true)
+	public abstract Contest toContestIgnoreOrganizer(SingleEventCreateRequestDto dto);
+	
 	// bổ sung phần after mapping để set training sau
-	public abstract TrainingEvent toTrainingEvent(
+	@Mapping(target = "organizers", ignore = true)
+	public abstract TrainingEvent toTrainingEventIgnoreOrganizer(
 		TrainingEventCreateRequestDto dto
 	);
+	
+	public void afterEventMapping(
+		@MappingTarget Event.EventBuilder<?, ?> trainingEvent,
+		TrainingEventCreateRequestDto dto
+	) {
+	}
 
 	public abstract EventDetailResponseDto toEventDetailResponseDto(
 		Seminar event
@@ -129,4 +142,6 @@ public abstract class EventMapper {
 		EventUpdateRequestDto dto,
 		@MappingTarget Seminar event
 	);
+	
+	
 }

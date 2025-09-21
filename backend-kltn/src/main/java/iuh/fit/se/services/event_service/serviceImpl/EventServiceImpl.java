@@ -102,7 +102,8 @@ public class EventServiceImpl implements EventService {
 		EventFactory factory = getFactory(dto);
 		Event e = factory
 			.createEvent(dto,
-				userRepository.getReferenceById(tokenContextUtil.getUserId()));
+				userRepository.getReferenceById(tokenContextUtil.getUserId()),
+				userRepository);
 		Event savedEvent = eventRepository.save(e);
 		EventDetailResponseDto eventDetailResponseDto = factory
 			.toEventDetailResponseDto(savedEvent);
@@ -341,20 +342,22 @@ public class EventServiceImpl implements EventService {
 			throw new IllegalStateException(
 				"Cannot update standings for a contest that is done");
 		}
-		
-		Optional<EventOrganizer> eOrganizerById = eventOrganizerRepository.findById(EventOrganizerId
-			.builder()
-			.eventId(eventId)
-			.organizerId(userId)
-			.build());
+
+		Optional<EventOrganizer> eOrganizerById = eventOrganizerRepository
+			.findById(EventOrganizerId
+				.builder()
+				.eventId(eventId)
+				.organizerId(userId)
+				.build());
 		boolean isOrganizerWithRole = eOrganizerById
-			.map(organizer -> organizer.getRoles().contains(OrganizerRole.MODIFY))
+			.map(organizer -> organizer
+				.getRoles()
+				.contains(OrganizerRole.MODIFY))
 			.orElse(false);
-		
+
 		if (contest.getHost().getId().equalsIgnoreCase(userId) == false
 			&& tokenContextUtil.getRole().isLeaderOrHigher() == false
-			&& isOrganizerWithRole == false
-			) {
+			&& isOrganizerWithRole == false) {
 			throw new SecurityException(
 				"Only the host or leader or organizer with MODIFY roles can update standings for this contest");
 		}
@@ -754,13 +757,13 @@ public class EventServiceImpl implements EventService {
 				"Only the host, organizers, or leader can view organizers for this event");
 		}
 
-		return eventOrganizerRepository.findAllByEventId(eventId);
+		return eventOrganizerRepository.findAllByEvent(event);
 	}
-	
+
 	@Override
 	public List<String> getReviewsForSeminarEvent(String eventId,
 		String getterId) {
-		
+
 		Event event = eventRepository
 			.findById(eventId)
 			.orElseThrow(() -> new NotFoundErrorHandler(
@@ -770,12 +773,13 @@ public class EventServiceImpl implements EventService {
 				"Event with ID " + eventId + " is not a seminar");
 		}
 		// Check if the current user is the host or leader
-		if (!seminar.getHost().getId().equalsIgnoreCase(getterId) && !ContextUtil.isLeader()) {
+		if (!seminar.getHost().getId().equalsIgnoreCase(getterId)
+			&& !ContextUtil.isLeader()) {
 			throw new SecurityException(
 				"Only the host or leader can view reviews for this seminar");
 		}
 		return seminar.getReviews();
-			
+
 	}
 
 	@Override
@@ -864,9 +868,10 @@ public class EventServiceImpl implements EventService {
 			throw new IllegalArgumentException(
 				"Event with ID " + eventId + " is not a seminar");
 		}
-		
+
 		Attendee attendee = event.getAttendeeByUserId(userId);
-		if (attendee == null || attendee.getStatus() != AttendeeStatus.CHECKED) {
+		if (attendee == null
+			|| attendee.getStatus() != AttendeeStatus.CHECKED) {
 			throw new IllegalStateException(
 				"Chỉ có những ngươi tham gia sự kiện và đã điểm danh mới được đánh giá");
 		}
