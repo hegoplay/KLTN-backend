@@ -19,6 +19,13 @@ public interface PostRepository extends JpaRepository<Post, String> {
 		Pageable pageable
 	);
 	
+	Page<Post> findAllByTitleContainingIgnoreCaseAndPostTimeBetween(
+		String title,
+		LocalDateTime startDate,
+		LocalDateTime endDate,
+		Pageable pageable
+	);
+	
 //	hàm này dùng để tìm kiếm bài viết theo userId, status và title
 	Page<Post> findAllByWriter_IdAndStatusAndTitleContainingIgnoreCase(
 		String userId,

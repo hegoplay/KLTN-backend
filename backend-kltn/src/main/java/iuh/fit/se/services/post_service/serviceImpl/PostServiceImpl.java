@@ -47,7 +47,12 @@ public class PostServiceImpl implements PostService {
 		Pageable pageable,
 		SearchPostRequestDto searchPostRequest
 	) {
-		// TODO Auto-generated method stub
+		if (searchPostRequest.getFromDate() == null) {
+			searchPostRequest.setFromDate(TimeConstant.MIN_DATE);
+		}
+		if (searchPostRequest.getToDate() == null) {
+			searchPostRequest.setToDate(TimeConstant.MAX_DATE);
+		}
 		return postRepository
 			.findAllByStatusAndTitleContainingIgnoreCaseAndPostTimeBetween(
 				FunctionStatus.ACCEPTED, searchPostRequest.getSearchKeyword(),
@@ -57,6 +62,24 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
+	public Page<Post> getAllPosts(Pageable pageable,
+		SearchPostRequestDto searchPostRequest) {
+		if (searchPostRequest.getFromDate() == null) {
+			searchPostRequest.setFromDate(TimeConstant.MIN_DATE);
+		}
+		if (searchPostRequest.getToDate() == null) {
+			searchPostRequest.setToDate(TimeConstant.MAX_DATE);
+		}
+		return postRepository
+			.findAllByTitleContainingIgnoreCaseAndPostTimeBetween(
+				searchPostRequest.getSearchKeyword() == null ? searchPostRequest.getSearchKeyword() : "" ,
+				TimeConstant.toLocalDateTime(searchPostRequest.getFromDate()),
+				TimeConstant.toLocalDateTime(searchPostRequest.getToDate()),
+				pageable);
+	}
+	
+	
+	@Override
 	public boolean isPostExist(String postId) {
 		return postRepository.existsById(postId);
 	}
@@ -65,7 +88,6 @@ public class PostServiceImpl implements PostService {
 	@PostPermission(action = ActionType.CREATE)
 	@Transactional
 	public Post createPost(PostRequestDto postDto) {
-
 		if (!postDto.isCreateAble()) {
 			throw new RuntimeException(
 				"Post status cannot be DISABLED or ACCEPTED or ACCEPTED when creating a new post");

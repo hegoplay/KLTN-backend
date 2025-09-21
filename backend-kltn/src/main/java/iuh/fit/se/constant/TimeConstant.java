@@ -7,6 +7,8 @@ import java.time.LocalTime;
 public class TimeConstant {
 	public static final LocalTime OPENING_TIME = LocalTime.of(6, 0); // 6:00 AM
 	public static final LocalTime CLOSING_TIME = LocalTime.of(22, 0); // 10:00 PM
+	public static final LocalDate MIN_DATE = LocalDate.of(1970, 1, 1);
+	public static final LocalDate MAX_DATE = LocalDate.of(3000, 1, 1);
 	
 	public static LocalDateTime getCurrentCloseTime() {
 		LocalDateTime now = LocalDateTime.now();

@@ -68,7 +68,7 @@ public class PublicPostController {
 		""")
 	
 	public ResponseEntity<PagedModel<EntityModel<PostWrapperDto>>> searchPosts(
-		@RequestParam(required = false) String keyword,
+		@RequestParam(required = false, defaultValue = "") String keyword,
 		@Parameter(
 	        description = "Trường để xác định đầu khoảng thời gian đăng là lúc nào",
 	        example = "2023-01-01",

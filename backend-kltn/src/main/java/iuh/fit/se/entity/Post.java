@@ -40,7 +40,7 @@ import lombok.experimental.FieldDefaults;
 public class Post {
 	@Id
 	@GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
-	String postId;
+	String id;
 	String title;
 
 	@ManyToOne

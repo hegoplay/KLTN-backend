@@ -32,7 +32,6 @@
 		<org.mapstruct.version>1.6.3</org.mapstruct.version>
 		<jwt.version>0.12.6</jwt.version>
     <aws.sdk.version>2.31.15</aws.sdk.version>
-    <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
     <okhttp3.version>4.12.0</okhttp3.version>
     <springdoc.version>2.8.9</springdoc.version>
 		<spring-cloud.version>2025.0.0</spring-cloud.version>

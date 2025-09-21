@@ -12,6 +12,8 @@ public interface PostService {
 	
 	Page<Post> getAllPublicPosts(Pageable pageable, SearchPostRequestDto searchPostRequest);
 	
+	Page<Post> getAllPosts(Pageable pageable, SearchPostRequestDto searchPostRequest);
+	
 	boolean isPostExist(String postId);
 	
 	Post createPost(PostRequestDto post);

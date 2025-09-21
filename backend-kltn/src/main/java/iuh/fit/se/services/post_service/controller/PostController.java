@@ -65,6 +65,7 @@ public class PostController {
 		@RequestBody @Valid PostRequestDto dto,
 		HttpServletRequest request
 	) {
+		
 		Post createdPost = postService.createPost(dto);
 		PostWrapperDto postWrapperDto = postMapper
 			.toPostWrapperDto(createdPost);
@@ -166,6 +167,29 @@ public class PostController {
 	public ResponseEntity<Void> deleteComment(@PathVariable String commentId) {
 		commentService.deleteComment(commentId);
 		return ResponseEntity.noContent().build();
+	}
+	
+	@GetMapping("me/search")
+	@Operation(summary = "Lấy tất cả bài viết của người đang truy vấn", description = """
+		Lấy bài viết của người đang truy vấn.
+		""")
+	public ResponseEntity<PagedModel<EntityModel<PostWrapperDto>>> searchMyPosts(
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "10") int size,
+		@RequestParam(required = false) String sort,
+		@RequestParam(required = false) FunctionStatus status,
+		@RequestParam(required = false, defaultValue = "") String title,
+		HttpServletRequest request
+		) {
+		String userId = jwtTokenUtil.getUserIdFromRequest(request);
+		Pageable pageable = PageRequest
+			.of(page, size, PageableUtil.parseSort(sort));
+		Page<Post> allPublicPosts = postService
+			.getPostsByUserId(userId, status, title, pageable);
+		return ResponseEntity
+			.ok(pagedResourcesAssembler
+				.toModel(allPublicPosts.map(postMapper::toPostWrapperDto)));
+		
 	}
 
 }
