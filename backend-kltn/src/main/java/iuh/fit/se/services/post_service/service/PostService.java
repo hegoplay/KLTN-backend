@@ -22,11 +22,13 @@ public interface PostService {
 	 */
 	Post validatePost(String postId);
 	
+	Post getMyPostById(String postId);
 	Post getAcceptedPostById(String postId);
 	
 	Post updatePost(String postId, PostRequestDto post);
 	
 	Post modifyPost(String postId, FunctionStatus status);
+	
 	
 	void deletePost(String postId);
 	

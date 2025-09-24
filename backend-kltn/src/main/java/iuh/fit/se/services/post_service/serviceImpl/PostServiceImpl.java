@@ -119,6 +119,17 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
+	public Post getMyPostById(String postId) {
+		// TODO Auto-generated method stub
+		Post post = getPostById(postId);
+		if (tokenContextUtil.getUserId() != post.getWriter().getId()
+			&& !tokenContextUtil.getRole().isLeaderOrHigher()) {
+			throw new RuntimeException("User is not authorized to view this post");
+		}
+		return post;
+	}
+	
+	@Override
 	public Post getAcceptedPostById(String postId) {
 		Post post = getPostById(postId);
 		if (post.getStatus() != FunctionStatus.ACCEPTED) {

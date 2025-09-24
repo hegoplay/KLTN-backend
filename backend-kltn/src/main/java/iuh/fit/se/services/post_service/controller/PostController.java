@@ -28,6 +28,7 @@ import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.post_service.dto.CommentCreateRequestDto;
 import iuh.fit.se.services.post_service.dto.CommentResponseDto;
 import iuh.fit.se.services.post_service.dto.CommentUpdateRequestDto;
+import iuh.fit.se.services.post_service.dto.PostDetailDto;
 import iuh.fit.se.services.post_service.dto.PostRequestDto;
 import iuh.fit.se.services.post_service.dto.PostWrapperDto;
 import iuh.fit.se.services.post_service.service.CommentService;
@@ -58,6 +59,19 @@ public class PostController {
 	
 	PagedResourcesAssembler<PostWrapperDto> pagedResourcesAssembler;
 
+	@GetMapping("/{postId}")
+	@Operation(summary = "Lấy thông tin chi tiết của bài viết", description = """
+		Lấy thông tin chi tiết của một bài viết theo ID.
+		Nếu bài viết không tồn tại, trả về mã lỗi 404.
+		""")
+	public ResponseEntity<PostDetailDto> getPostById(@PathVariable String postId) {
+		Post post = postService.getMyPostById(postId);
+		
+		PostDetailDto postDetailDto = postMapper.toPostDetailDto(post);
+		return ResponseEntity.ok(postDetailDto);
+		
+	}
+	
 	@PostMapping
 	@PreAuthorize("hasRole('MEMBER') or hasRole('ADMIN') or hasRole('LEADER')")
 	@Operation(summary = "Tạo post", description = "Tạo một bài viết mới. Chỉ có người dùng có vai trò MEMBER, ADMIN hoặc LEADER mới có quyền tạo bài viết.")
@@ -192,4 +206,6 @@ public class PostController {
 		
 	}
 
+	
+	
 }
