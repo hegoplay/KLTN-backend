@@ -4,9 +4,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import iuh.fit.se.entity.User;
+import iuh.fit.se.entity.enumerator.UserRole;
 import iuh.fit.se.services.user_service.dto.RegisterRequestDto;
 import iuh.fit.se.services.user_service.dto.UpdatePasswordRequestDto;
+import iuh.fit.se.services.user_service.dto.UserChangeRoleRequestDto;
 import iuh.fit.se.services.user_service.dto.UserUpdateInfoRequestDto;
+import iuh.fit.se.services.user_service.dto.UserUpdatePasswordDto;
 
 public interface UserService {
 
@@ -23,9 +26,11 @@ public interface UserService {
 
 	void updateMyPassword(String userId, UpdatePasswordRequestDto dto);
 	void updateUserPassword(User user, String newPassword);
+	void leaderUpdateUserPassword(String userId, UserUpdatePasswordDto newPassword);
+	void leaderChangeUserRole(String userId, UserChangeRoleRequestDto newRole);
 	
 	void resetAllAttendancePoint();
 	void resetAllContributionPoint();
 	
-	Page<User> searchUsers(String keyword, Pageable pageable);
+	Page<User> searchUsers(String keyword, Pageable pageable, UserRole role);
 }

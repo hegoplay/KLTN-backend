@@ -24,6 +24,9 @@ public interface TrainingService {
 		TrainingSearchDto dto,
 		FunctionStatus status
 	);
+	Page<TrainingWrapperDto> getRegisteredTrainings(
+		TrainingSearchDto dto
+		);
 	Page<TrainingWrapperDto> searchTrainings(
 		Specification<Training> spec,
 		TrainingSearchDto dto

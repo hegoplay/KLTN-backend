@@ -148,5 +148,30 @@ public class GlobalExceptionHandler {
 		log.error("Bad Request: {}", ex.getMessage());
 		return ResponseEntity.of(problemDetail).build();
 	}
+//	Bắt lỗi khi request đến role người dùng có vấn đề
+	@ExceptionHandler(ConflictException.class)
+	protected ResponseEntity<ProblemDetail> handleNotFoundException(
+		ConflictException ex,
+		HttpServletRequest request
+	) {
+		ProblemDetail problemDetail = ProblemDetail
+			.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+		problemDetail.setTitle("Conflict Request Exception");
+		log.error("Conflict Exception: {}", ex.getMessage());
+		return ResponseEntity.of(problemDetail).build();
+	}
+	
+//	Bắt lỗi khi request đến role người dùng có vấn đề
+	@ExceptionHandler(NotAllowedException.class)
+	protected ResponseEntity<ProblemDetail> handleNotFoundException(
+		NotAllowedException ex,
+		HttpServletRequest request
+	) {
+		ProblemDetail problemDetail = ProblemDetail
+			.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+		problemDetail.setTitle("Not Allowed Exception");
+		log.error("Not Allowed Exception: {}", ex.getMessage());
+		return ResponseEntity.of(problemDetail).build();
+	}
 	
 }

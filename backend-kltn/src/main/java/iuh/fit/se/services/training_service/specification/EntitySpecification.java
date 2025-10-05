@@ -48,7 +48,7 @@ public class EntitySpecification<T> {
 		};
 	}
 	
-	public static Specification<Training> hasCreatorId(String creatorId) {
+	public static<T> Specification<T> hasCreatorId(String creatorId) {
 		return (root, query, criteriaBuilder) -> criteriaBuilder
 			.equal(root.get("creator").get("id"), creatorId);
 	}
@@ -60,4 +60,11 @@ public class EntitySpecification<T> {
 		};
 	}
 
+	public static Specification<Training> hasParticipantId(String participantId) {
+		return (root, query, criteriaBuilder) -> {
+			Join<Training, User> participantsJoin = root.join("participants",JoinType.INNER);
+			return criteriaBuilder.equal(participantsJoin.get("id"), participantId);
+		};
+	}
+	
 }

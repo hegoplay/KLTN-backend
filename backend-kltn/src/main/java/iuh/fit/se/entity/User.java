@@ -25,6 +25,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @Entity
 @Data
@@ -34,6 +35,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Slf4j
 public class User implements java.io.Serializable, UserDetails {
 	private static final long serialVersionUID = -6004794275702672464L;
 
@@ -100,6 +102,7 @@ public class User implements java.io.Serializable, UserDetails {
 		if (role != null) {
 			val = role.getValue();
 		}
+		log.info("Current value: {}", val);
 
 		for (UserRole r : UserRole.values()) {
 			if (r.getValue() <= val) {

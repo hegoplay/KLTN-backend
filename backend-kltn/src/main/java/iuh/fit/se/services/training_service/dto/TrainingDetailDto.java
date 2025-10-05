@@ -15,6 +15,7 @@ import lombok.experimental.SuperBuilder;
 @lombok.experimental.FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @ToString(callSuper = true)
 public class TrainingDetailDto extends TrainingWrapperDto {
+	String description;
 	List<EventWrapperDto> trainingEvents;
 	List<UserShortInfoResponseDto> mentors;
 	

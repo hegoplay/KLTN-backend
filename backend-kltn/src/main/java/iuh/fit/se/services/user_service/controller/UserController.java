@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.api.UserAPI;
 import iuh.fit.se.entity.User;
+import iuh.fit.se.entity.enumerator.UserRole;
 import iuh.fit.se.services.user_service.dto.UpdatePasswordRequestDto;
 import iuh.fit.se.services.user_service.dto.UserInfoResponseDto;
 import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
@@ -121,10 +122,11 @@ public class UserController {
 		@RequestParam(required = false) String keyword,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
-		@RequestParam(defaultValue = "username,asc") String sort) {
+		@RequestParam(defaultValue = "username,asc") String sort,
+		@RequestParam(required = false) UserRole role) {
 		var pageSort = PageableUtil.parseSort(sort);
 		var users = userService
-			.searchUsers(keyword, PageRequest.of(page, size, pageSort));
+			.searchUsers(keyword, PageRequest.of(page, size, pageSort), role);
 		var userDtos = users.map(userMapper::toShortUserInfoResponseDto);
 		return ResponseEntity.ok(pagedResourcesAssembler.toModel(userDtos));
 	}
