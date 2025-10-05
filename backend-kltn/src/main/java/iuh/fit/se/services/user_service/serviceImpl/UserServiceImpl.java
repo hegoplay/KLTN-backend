@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,10 +12,14 @@ import org.springframework.stereotype.Service;
 
 import iuh.fit.se.entity.GlobalConfiguration;
 import iuh.fit.se.entity.User;
+import iuh.fit.se.entity.enumerator.UserRole;
+import iuh.fit.se.errorHandler.ConflictException;
 import iuh.fit.se.repository.GlobalConfigurationRepository;
 import iuh.fit.se.services.user_service.dto.RegisterRequestDto;
 import iuh.fit.se.services.user_service.dto.UpdatePasswordRequestDto;
+import iuh.fit.se.services.user_service.dto.UserChangeRoleRequestDto;
 import iuh.fit.se.services.user_service.dto.UserUpdateInfoRequestDto;
+import iuh.fit.se.services.user_service.dto.UserUpdatePasswordDto;
 import iuh.fit.se.services.user_service.mapper.UserMapper;
 import iuh.fit.se.services.user_service.repository.UserRepository;
 import iuh.fit.se.services.user_service.service.UserService;
@@ -33,6 +38,9 @@ public class UserServiceImpl implements UserService {
 	UserMapper userMapper;
 	PasswordEncoder passwordEncoder;
 	GlobalConfigurationRepository globalConfigurationRepo;
+	
+	private static final int MAX_LEADER_PER_COURSE = 1;
+	private static final int STUDENT_ID_LENGTH = 6;
 
 	@Override
 	public User saveUser(User user) {
@@ -128,7 +136,9 @@ public class UserServiceImpl implements UserService {
 			.matches(dto.getOldPassword(), user.getPassword())) {
 			throw new IllegalArgumentException("Old password is incorrect");
 		}
-		if (!dto.getNewPassword().equalsIgnoreCase(dto.getConfirmNewPassword())) {
+		if (!dto
+			.getNewPassword()
+			.equalsIgnoreCase(dto.getConfirmNewPassword())) {
 			throw new IllegalArgumentException(
 				"New password and confirm new password do not match");
 		}
@@ -141,6 +151,67 @@ public class UserServiceImpl implements UserService {
 			throw new IllegalArgumentException("User cannot be null");
 		}
 		user.setPassword(passwordEncoder.encode(newPassword));
+		userRepository.save(user);
+	}
+
+	@Override
+	public void leaderUpdateUserPassword(String userId,
+		UserUpdatePasswordDto newPassword) {
+		User user = userRepository
+			.findById(userId)
+			.orElseThrow(() -> new RuntimeException(
+				"User not found with ID: " + userId));
+		updateUserPassword(user, newPassword.getNewPassword());
+	}
+
+	@Override
+	@Transactional
+	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER')")
+	public void leaderChangeUserRole(String userId,
+		UserChangeRoleRequestDto newRole) {
+		User user = userRepository
+			.findById(userId)
+			.orElseThrow(() -> new RuntimeException(
+				"User not found with ID: " + userId));
+		if (user.isAdmin()) {
+			throw new IllegalArgumentException(
+				"Cannot change role of an admin user");
+		}
+		if (newRole.getNewRole() == UserRole.ADMIN) {
+			throw new IllegalArgumentException(
+				"Cannot assign ADMIN role. Only ADMIN can assign this role");
+		}
+		if (newRole.getNewRole() == UserRole.LEADER) {
+			Specification<User> leaderSpec = (root, query, criteriaBuilder) -> {
+				return criteriaBuilder.equal(root.get("role"), UserRole.LEADER);
+			};
+			if (user.getStudentId() != null) {
+				String courses = user.getStudentId().substring(0, user.getStudentId().length() - STUDENT_ID_LENGTH);
+				leaderSpec = leaderSpec.and((root, query, criteriaBuilder) -> {
+					return criteriaBuilder.like(root.get("studentId"),
+						courses + "%");
+				});
+			}
+			else {
+				throw new IllegalArgumentException(
+					"Cannot assign LEADER role to user without student ID");
+			}
+			Optional<User> currentLeaderUser = userRepository.findOne(leaderSpec);
+			if (currentLeaderUser.isPresent()) {
+				User currentLeader = currentLeaderUser.get();
+				if (newRole.isAccepted()) {
+					currentLeader.setRole(UserRole.MEMBER);
+					userRepository.save(currentLeader);
+				}
+				else {
+					throw new ConflictException(
+						"Cannot assign LEADER role. There is already a LEADER in the course: "
+							+ currentLeader.getStudentId() + ". If want to change, send accepted to true");
+					
+				}
+			}
+		}
+		user.setRole(newRole.getNewRole());
 		userRepository.save(user);
 	}
 
@@ -196,14 +267,29 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public Page<User> searchUsers(String keyword, Pageable pageable) {
-		if (keyword == null || keyword.isBlank()) {
-			return userRepository.findAll(pageable);
-		} else {
-			return userRepository
-				.findByUsernameContainingIgnoreCaseOrFullNameContainingIgnoreCaseOrId(
-					keyword, keyword, keyword, pageable);
+	public Page<User> searchUsers(String keyword, Pageable pageable,
+		UserRole role) {
+		log.info("role: {}", role);
+		Specification<User> userSpec = Specification.unrestricted();
+		if (role != null) {
+			userSpec = userSpec.and((root, query, criteriaBuilder) -> {
+				return criteriaBuilder.equal(root.get("role"), role);
+			});
 		}
+		if (keyword != null && keyword.isBlank()) {
+			userSpec = userSpec.and((root, query, criteriaBuilder) -> {
+				return criteriaBuilder
+					.like(root.get("username"), "%" + keyword + "%");
+			});
+			userSpec = userSpec.and((root, query, criteriaBuilder) -> {
+				return criteriaBuilder
+					.like(root.get("fullName"), "%" + keyword + "%");
+			});
+			userSpec = userSpec.and((root, query, criteriaBuilder) -> {
+				return criteriaBuilder.equal(root.get("id"), keyword);
+			});
+		}
+		return userRepository.findAll(userSpec, pageable);
 	}
 
 }

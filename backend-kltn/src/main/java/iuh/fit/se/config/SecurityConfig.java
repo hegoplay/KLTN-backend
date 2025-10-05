@@ -21,6 +21,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import iuh.fit.se.entity.enumerator.UserRole;
 import iuh.fit.se.filter.JwtAuthenticationFilter;
 import iuh.fit.se.filter.ThreadLocalCleanupFilter;
 import lombok.extern.slf4j.Slf4j;

@@ -126,10 +126,11 @@ public class TrainingServiceImpl implements TrainingService {
 
 		spec = spec
 			.and(EntitySpecification
-				.hasCreatorId(tokenContextUtil.getUserId())
+				.<Training>hasCreatorId(tokenContextUtil.getUserId())
 				// TODO: sửa lại hàm hasMentorId
 				.or(EntitySpecification
 					.hasMentorId(tokenContextUtil.getUserId())));
+		
 		if (status != null)
 			spec = spec.and(EntitySpecification.hasStatus(status));
 		return searchTrainings(spec, dto);
@@ -182,6 +183,18 @@ public class TrainingServiceImpl implements TrainingService {
 
 		trainingRepository.delete(training);
 
+	}
+
+	@Override
+	public Page<TrainingWrapperDto> getRegisteredTrainings(
+		TrainingSearchDto dto) {
+
+		Specification<Training> spec = Specification.unrestricted();
+
+		String userId = tokenContextUtil.getUserId();
+		spec = spec.and(EntitySpecification.hasParticipantId(userId));
+		
+		return searchTrainings(spec, dto);
 	}
 
 	@Override
@@ -364,6 +377,8 @@ public class TrainingServiceImpl implements TrainingService {
 			training.removeParticipant(userRepository.getReferenceById(userId));
 		}
 		eventRepository.saveAll(events);
+		training.addParticipant(userRepository.getReferenceById(userId));
+		trainingRepository.save(training);
 	}
 
 	@Override

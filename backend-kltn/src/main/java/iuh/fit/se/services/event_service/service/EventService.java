@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import iuh.fit.se.entity.Attendee;
 import iuh.fit.se.entity.Event;
 import iuh.fit.se.entity.EventOrganizer;
+import iuh.fit.se.entity.enumerator.AttendeeStatus;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.request.BaseEventCreateRequestDto;
@@ -30,6 +31,9 @@ public interface EventService {
 
 	Page<Event> searchMyEvents(EventSearchRequestDto request,
 		FunctionStatus status, String userId);
+	
+	Page<Event> searchRegisteredEvents(EventSearchRequestDto request,
+		FunctionStatus status, String userId, AttendeeStatus attendeeStatus);
 
 	EventDetailResponseDto getEventById(String eventId);
 

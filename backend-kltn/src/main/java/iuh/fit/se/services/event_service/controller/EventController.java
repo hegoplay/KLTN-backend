@@ -15,6 +15,7 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,6 +32,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.api.EventAPI;
 import iuh.fit.se.entity.Attendee;
 import iuh.fit.se.entity.Event;
+import iuh.fit.se.entity.enumerator.AttendeeStatus;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.event_service.dto.AttendeeDto;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
@@ -165,7 +167,7 @@ public class EventController {
 		@RequestParam(required = false) FunctionStatus status,
 		HttpServletRequest httpServletRequest) {
 		EventSearchRequestDto request = new EventSearchRequestDto(keyword,
-			eventType, isDone, startTime, endTime, page, size,
+			eventType, isDone, startTime, endTime, page, size, sort,
 			PageableUtil.parseSort(sort));
 		String tokenFromRequest = jwtT.getTokenFromRequest(httpServletRequest);
 		Page<Event> searchUserEvents = eventService
@@ -393,9 +395,9 @@ public class EventController {
 			API này cho phép lấy danh sách đánh giá cho sự kiện có loại là SEMINAR.
 			Danh sách đánh giá chỉ bao gồm nội dung đánh giá, không bao gồm thông tin người đánh giá.
 			Người dùng phải là host sự kiện, admin có quyền của sự kiện để sử dụng API này.
-			
+
 			""")
-//	TODO: ban tổ chức có quyền VIEW
+	// TODO: ban tổ chức có quyền VIEW
 	@GetMapping(EventAPI.SEMINAR_ID_GET_REVIEWS)
 	public ResponseEntity<SeminarReviewsResponseDto> getReviewsForSeminarEvent(
 		@PathVariable String eventId, HttpServletRequest httpServletRequest) {
@@ -406,4 +408,28 @@ public class EventController {
 		return ResponseEntity.ok(new SeminarReviewsResponseDto(reviews));
 	}
 
+	@Operation(
+		summary = "Lấy danh sách sự kiện đã đăng ký của người dùng hiện tại",
+		description = """
+			API này cho phép lấy danh sách các sự kiện mà người dùng hiện tại đã đăng ký tham gia.
+			Danh sách có thể được lọc theo trạng thái chức năng của sự kiện và trạng thái tham gia của người dùng.
+			Kết quả trả về được phân trang và sắp xếp theo yêu cầu.
+			Người dùng phải có vai trò là member trở lên để sử dụng API này.
+			""")
+	@GetMapping(EventAPI.SEARCH_REGISTERED_EVENTS)
+	public ResponseEntity<PagedModel<EntityModel<EventWrapperDto>>> getRegisteredEvents(
+		@ModelAttribute EventSearchRequestDto request,
+		@RequestParam(required = false) FunctionStatus status,
+		@RequestParam(required = false) AttendeeStatus attendeeStatus,
+		HttpServletRequest httpServletRequest) {
+		request.setSortBy(PageableUtil.parseSort(request.getSort()));
+		String userId = jwtT.getUserIdFromRequest(httpServletRequest);
+		Page<Event> searchUserEvents = eventService
+			.searchRegisteredEvents(request, status, userId, attendeeStatus);
+
+		return ResponseEntity
+			.ok(pagedResourcesAssembler
+				.toModel(searchUserEvents.map(eventMapper::toEventWrapperDto)));
+
+	}
 }

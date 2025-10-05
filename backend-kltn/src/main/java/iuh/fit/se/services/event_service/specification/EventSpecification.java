@@ -2,11 +2,14 @@ package iuh.fit.se.services.event_service.specification;
 
 import org.springframework.data.jpa.domain.Specification;
 
+import iuh.fit.se.entity.Attendee;
 import iuh.fit.se.entity.Event;
 import iuh.fit.se.entity.EventOrganizer;
+import iuh.fit.se.entity.enumerator.AttendeeStatus;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 
 public class EventSpecification {
 
@@ -114,6 +117,18 @@ public class EventSpecification {
 			} else {
 				return criteriaBuilder.conjunction();
 			}
+		};
+	}
+	
+	public static Specification<Event> includeAttendeeIdAndAttendeeStatus(String attendeeId, 
+		AttendeeStatus status) {
+		return (root, query, criteriaBuilder) -> {
+			Join<Event, Attendee> attendeesJoin = root.join("attendeesMap", JoinType.INNER);
+			Predicate equal = criteriaBuilder.equal(attendeesJoin.get("userId"), attendeeId);
+			if (status != null) {
+				equal = criteriaBuilder.and(equal, criteriaBuilder.equal(attendeesJoin.get("status"), status));
+			}
+			return equal;
 		};
 	}
 }

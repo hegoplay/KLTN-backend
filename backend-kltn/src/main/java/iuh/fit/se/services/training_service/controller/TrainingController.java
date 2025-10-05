@@ -10,6 +10,7 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import iuh.fit.se.api.TrainingAPI;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.event_service.dto.request.ManualTriggerRequestDto;
 import iuh.fit.se.services.training_service.dto.TrainingCreateRequestDto;
@@ -41,7 +43,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/api/trainings")
+@RequestMapping(TrainingAPI.BASE_URL)
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @Slf4j
@@ -201,5 +203,17 @@ public class TrainingController {
 				dto.getRemoveMentorIds());
 		return ResponseEntity.accepted().build();
 	}
-
+	@GetMapping("/search/registered-trainings")
+	@Operation(
+		summary = "Tìm kiếm các training mà tôi đã đăng ký tham gia",
+		description = "Trả về danh sách các training mà tôi đã đăng ký tham gia")
+	public ResponseEntity<PagedModel<EntityModel<TrainingWrapperDto>>> getRegisteredTrainings(
+		@ModelAttribute TrainingSearchDto searchDto
+		) {
+		searchDto.setSortBy(PageableUtil.parseSort(searchDto.getSort()));
+		Page<TrainingWrapperDto> registeredTrainings = trainingService
+			.getRegisteredTrainings(searchDto);
+		return ResponseEntity
+			.ok(trainingPagedResourcesAssembler.toModel(registeredTrainings));
+	}
 }

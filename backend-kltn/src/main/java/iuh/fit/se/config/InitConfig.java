@@ -99,6 +99,16 @@ public class InitConfig {
 				.dateOfBirth(LocalDate.of(2000, 1, 1))
 				.disabled(false)
 				.build(), userRepository);
+			createSampleUser(User
+				.builder()
+				.username("leader")
+				.password(passwordEncoder.encode("password"))
+				.email("pmanh49@gmail.com")
+				.fullName("Pham Mạnh")
+				.role(UserRole.LEADER)
+				.dateOfBirth(LocalDate.of(2000, 1, 1))
+				.disabled(false)
+				.build(), userRepository);
 
 			IntStream.range(1, 11).forEach(i -> {
 				User user = User

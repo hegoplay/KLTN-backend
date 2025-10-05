@@ -97,7 +97,7 @@ public class EventPublicController {
 	) {
 		EventSearchRequestDto request = new EventSearchRequestDto(keyword,
 			eventType, isDone, startTime, endTime, page, size,
-			PageableUtil.parseSort(sort));
+			sort,PageableUtil.parseSort(sort));
 
 		Page<Event> events = eventService.searchPublicEvents(request);
 		return ResponseEntity

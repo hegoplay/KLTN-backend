@@ -184,6 +184,14 @@ public class EventServiceImpl implements EventService {
 
 		return searchEvents(spec, request);
 	}
+	
+	@Override
+	public Page<Event> searchRegisteredEvents(EventSearchRequestDto request,
+		FunctionStatus status, String userId, AttendeeStatus attendeeStatus) {
+		Specification<Event> spec = Specification.unrestricted();
+		spec = spec.and(EventSpecification.includeAttendeeIdAndAttendeeStatus(userId,attendeeStatus));
+		return searchEvents(spec, request);
+	}
 
 	@Override
 	public EventDetailResponseDto getEventById(String eventId) {
@@ -238,16 +246,16 @@ public class EventServiceImpl implements EventService {
 		EventSearchRequestDto request) {
 
 		// Keyword search (title hoặc content)
-		if (request.keyword() != null && !request.keyword().isEmpty()) {
+		if (request.getKeyword() != null && !request.getKeyword().isEmpty()) {
 			spec = spec
 				.and(EventSpecification
-					.hasTitleContaining(request.keyword())
+					.hasTitleContaining(request.getKeyword())
 					.or(EventSpecification
-						.hasDescriptionContaining(request.keyword())));
+						.hasDescriptionContaining(request.getKeyword())));
 		}
 		// Filter by event type
-		if (request.type() != null && request.type() != EventSearchType.ALL) {
-			Class<? extends Event> eventClass = switch (request.type()) {
+		if (request.getType() != null && request.getType() != EventSearchType.ALL) {
+			Class<? extends Event> eventClass = switch (request.getType()) {
 				case SEMINAR -> Seminar.class;
 				case CONTEST -> Contest.class;
 				// case TRAINING -> TrainingEvent.class;
@@ -263,8 +271,8 @@ public class EventServiceImpl implements EventService {
 		}
 
 		// Filter by isDone
-		if (request.isDone() != null) {
-			if (request.isDone()) {
+		if (request.getIsDone() != null) {
+			if (request.getIsDone()) {
 				spec = spec
 					.and((root, query, cb) -> cb.isTrue(root.get("isDone")));
 			} else {
@@ -274,7 +282,7 @@ public class EventServiceImpl implements EventService {
 		// startTime
 		spec = spec
 			.and(EventSpecification
-				.hasTimeBetween(request.startTime(), request.endTime()));
+			.hasTimeBetween(request.getStartTime(), request.getEndTime()));
 
 		return eventRepository.findAll(spec, request.toPageable());
 	}
