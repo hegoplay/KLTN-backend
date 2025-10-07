@@ -309,10 +309,10 @@ public class EventServiceImpl implements EventService {
 			throw new IllegalStateException(
 				"Cannot change status of an event that is already done");
 		}
-		// if (event.getStatus() != FunctionStatus.PENDING) {
-		// throw new IllegalStateException(
-		// "Can only change status of events that are in PENDING state");
-		// }
+//		 if (event.getStatus() != FunctionStatus.PENDING) {
+//				throw new IllegalStateException(
+//					"Can only change status of events that are in PENDING state");
+//		 }
 		// if (status != FunctionStatus.ACCEPTED || status !=
 		// FunctionStatus.REJECTED) {
 		//// TODO: chỉnh lại trạng thái được phép chuyển, hiện tại chỉ rằng buộc
@@ -322,7 +322,6 @@ public class EventServiceImpl implements EventService {
 		// }
 		log.debug("Event {} status updated to {}", event.getId(), status);
 		event.setStatus(status);
-
 	}
 
 	@Override

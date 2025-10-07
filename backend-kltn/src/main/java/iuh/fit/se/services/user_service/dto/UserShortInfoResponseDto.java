@@ -1,6 +1,7 @@
 package iuh.fit.se.services.user_service.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import iuh.fit.se.entity.enumerator.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -52,4 +53,8 @@ public class UserShortInfoResponseDto {
 		example = "John Doe",
 		requiredMode = Schema.RequiredMode.NOT_REQUIRED)
 	String fullName;
+	UserRole role;
+	Integer attendancePoint;
+	Integer contributionPoint;
+	Boolean disabled;
 }

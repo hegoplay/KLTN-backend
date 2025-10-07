@@ -2,6 +2,7 @@ package iuh.fit.se.services.post_service.dto;
 
 import java.time.LocalDateTime;
 
+import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.user_service.dto.AttachmentDto;
 import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
 import lombok.experimental.FieldDefaults;
@@ -19,5 +20,6 @@ public class PostWrapperDto {
 	String content;
 	AttachmentDto featureImage;
 	LocalDateTime lastModifiedTime;
+	FunctionStatus status;
 	
 }

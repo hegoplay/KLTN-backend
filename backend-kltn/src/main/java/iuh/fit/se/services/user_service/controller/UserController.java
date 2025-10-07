@@ -127,7 +127,7 @@ public class UserController {
 		var pageSort = PageableUtil.parseSort(sort);
 		var users = userService
 			.searchUsers(keyword, PageRequest.of(page, size, pageSort), role);
-		var userDtos = users.map(userMapper::toShortUserInfoResponseDto);
+		var userDtos = users.map(userMapper::toUserShortInfoResponseDto);
 		return ResponseEntity.ok(pagedResourcesAssembler.toModel(userDtos));
 	}
 
@@ -138,7 +138,7 @@ public class UserController {
 			API này cho phép người dùng cập nhật thông tin cá nhân của họ.
 			Thông tin được truyền dưới dạng JSON trong body của request.
 			""")
-	public ResponseEntity<UserInfoResponseDto> updateUserInfo(
+	public ResponseEntity<UserShortInfoResponseDto> updateUserInfo(
 		@Valid @RequestBody UserUpdateInfoRequestDto dto,
 		HttpServletRequest httpServletRequest
 		) {
@@ -146,7 +146,7 @@ public class UserController {
 		String userId = jwtT.getUserIdFromToken(tokenFromRequest);
 		User updatedUser = userService
 			.updateUserInfo(userId, dto);
-		return ResponseEntity.ok(userMapper.toUserInfoResponseDto(updatedUser));
+		return ResponseEntity.ok(userMapper.toUserShortInfoResponseDto(updatedUser));
 	}
 	
 	@PutMapping(UserAPI.UPDATE_MY_PASSWORD)

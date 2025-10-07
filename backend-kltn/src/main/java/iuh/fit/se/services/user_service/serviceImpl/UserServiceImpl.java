@@ -23,6 +23,7 @@ import iuh.fit.se.services.user_service.dto.UserUpdatePasswordDto;
 import iuh.fit.se.services.user_service.mapper.UserMapper;
 import iuh.fit.se.services.user_service.repository.UserRepository;
 import iuh.fit.se.services.user_service.service.UserService;
+import iuh.fit.se.util.TokenContextUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -38,6 +39,7 @@ public class UserServiceImpl implements UserService {
 	UserMapper userMapper;
 	PasswordEncoder passwordEncoder;
 	GlobalConfigurationRepository globalConfigurationRepo;
+	TokenContextUtil tokenContextUtil;
 	
 	private static final int MAX_LEADER_PER_COURSE = 1;
 	private static final int STUDENT_ID_LENGTH = 6;
@@ -161,6 +163,10 @@ public class UserServiceImpl implements UserService {
 			.findById(userId)
 			.orElseThrow(() -> new RuntimeException(
 				"User not found with ID: " + userId));
+		if (user.isAdmin() && !tokenContextUtil.getRole().isAdmin()) {
+			throw new IllegalArgumentException(
+				"Cannot change password of an admin user");
+		}
 		updateUserPassword(user, newPassword.getNewPassword());
 	}
 
@@ -276,7 +282,8 @@ public class UserServiceImpl implements UserService {
 				return criteriaBuilder.equal(root.get("role"), role);
 			});
 		}
-		if (keyword != null && keyword.isBlank()) {
+		log.info("keyword: {}", keyword);
+		if (keyword != null && !keyword.isBlank()) {
 			userSpec = userSpec.and((root, query, criteriaBuilder) -> {
 				return criteriaBuilder
 					.like(root.get("username"), "%" + keyword + "%");

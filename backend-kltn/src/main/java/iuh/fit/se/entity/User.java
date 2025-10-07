@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang3.builder.ToStringExclude;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -24,6 +25,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
+@ToString
 public class User implements java.io.Serializable, UserDetails {
 	private static final long serialVersionUID = -6004794275702672464L;
 
@@ -88,6 +91,7 @@ public class User implements java.io.Serializable, UserDetails {
 
 	@ManyToMany(mappedBy = "participants")
 	@Builder.Default
+	@ToString.Exclude
 	List<Training> registeredTrainings = new java.util.ArrayList<>();
 	//
 	@Builder.Default

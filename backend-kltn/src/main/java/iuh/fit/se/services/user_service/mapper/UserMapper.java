@@ -18,7 +18,7 @@ public abstract class UserMapper {
 	public abstract User toUserEntity(RegisterRequestDto requestDto);
 	public abstract UserInfoResponseDto toUserInfoResponseDto(User user);
 	
-	public abstract UserShortInfoResponseDto toShortUserInfoResponseDto(User user);
+	public abstract UserShortInfoResponseDto toUserShortInfoResponseDto(User user);
 	
 	@AfterMapping
     protected void afterToShortUserInfoResponseDto(User user, @MappingTarget UserShortInfoResponseDto.UserShortInfoResponseDtoBuilder dto)
