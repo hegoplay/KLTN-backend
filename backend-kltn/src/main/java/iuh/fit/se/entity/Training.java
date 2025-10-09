@@ -9,6 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -47,6 +48,7 @@ public class Training {
 				CascadeType.DETACH},
 		orphanRemoval = true)
 	List<TrainingEvent> trainingEvents;
+	@Column(columnDefinition = "TEXT")
 	String description;
 	Location location;
 

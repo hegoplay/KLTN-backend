@@ -68,6 +68,7 @@ public abstract class Event {
 	Location location;
 	@Column(nullable = false)
 	String title;
+	@Column(columnDefinition = "TEXT")
 	String description;
 
 	@OneToMany(

@@ -12,7 +12,7 @@ public record CommentCreateRequestDto(
         description = "Nội dung của bình luận",
         example = "Bài viết này rất hay và hữu ích!",
         minLength = 1,
-        maxLength = 2000
+        maxLength = 4000
     )
     String content,
     

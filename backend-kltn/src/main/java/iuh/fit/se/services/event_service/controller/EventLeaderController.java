@@ -186,7 +186,7 @@ public class EventLeaderController {
 			""")
 	@PatchMapping("/{eventId}/status")
 	public ResponseEntity<Void> updateEventStatus(
-		@RequestParam String eventId,
+		@PathVariable String eventId,
 		@RequestBody EventStatusUpdateRequestDto request
 	) {
 		eventService.updateSingleEventStatus(eventId, request.status());

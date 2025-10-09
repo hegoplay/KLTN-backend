@@ -1,5 +1,7 @@
 package iuh.fit.se.services.post_service.dto;
 
+import org.hibernate.validator.constraints.Length;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import jakarta.validation.constraints.NotBlank;
@@ -7,8 +9,11 @@ import jakarta.validation.constraints.NotNull;
 
 
 public record PostRequestDto(
-    @NotBlank(message = "Tiêu đề không được để trống") String title,
-    @NotBlank(message = "Nội dung không được để trống") String content,
+    @NotBlank(message = "Tiêu đề không được để trống") 
+    String title,
+    @NotBlank(message = "Nội dung không được để trống") 
+    @Length(max = 5000, message = "Nội dung không được vượt quá 5000 ký tự")
+    String content,
     String featureImageName,
     @NotNull(message = "Trạng thái là bắt buộc") FunctionStatus status
 ) {
