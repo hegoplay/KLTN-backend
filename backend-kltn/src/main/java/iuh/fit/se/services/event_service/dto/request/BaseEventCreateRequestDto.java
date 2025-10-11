@@ -46,10 +46,4 @@ public class BaseEventCreateRequestDto {
 
 	@NotNull(message = "Danh sách người tổ chức không được để trống")
 	private List<EventRequestOrganizerDto> organizers;
-
-	@Schema(description = "Loại sự kiện", defaultValue = "SEMINAR")
-	@NotNull(message = "Loại sự kiện không được để trống")
-	private EventCategory category;
-
-	
 }

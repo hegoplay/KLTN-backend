@@ -57,7 +57,7 @@ public class EventSpecification {
 
 	public static Specification<Event> hasHostedUserId(String userId) {
 		return (root, query, criteriaBuilder) -> criteriaBuilder
-			.equal(root.get("host").get("id"), userId);
+			.equal(root.get("hostId"), userId);
 	}
 
 	public static Specification<Event> hasHostedUsername(String username) {

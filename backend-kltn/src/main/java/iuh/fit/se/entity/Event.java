@@ -99,6 +99,9 @@ public abstract class Event {
 
 	LocalDateTime doneTime;
 
+	@Builder.Default
+	Integer limitRegister = 0;
+	
 	Boolean single;
 
 	protected abstract boolean isSingleTable();
@@ -214,6 +217,14 @@ public abstract class Event {
 			return this.attendeesMap.get(userId);
 		}
 		return null;
+	}
+	
+	public void clearOrganizers() {
+		if (this.organizers != null) {
+			for (EventOrganizer organizer : new ArrayList<>(this.organizers)) {
+				removeOrganizer(organizer);
+			}
+		}
 	}
 
 }

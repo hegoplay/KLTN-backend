@@ -112,7 +112,7 @@ public class EventServiceTest {
 			.location(locationDto)
 			.multiple(Integer.valueOf(1))
 			.organizers(List.of())
-			.category(EventCategory.TRAINING_EVENT)
+//			.category(EventCategory.TRAINING_EVENT)
 			.build();
 	}
 

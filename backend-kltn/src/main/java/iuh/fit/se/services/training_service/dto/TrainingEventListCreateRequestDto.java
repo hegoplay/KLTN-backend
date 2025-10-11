@@ -6,7 +6,6 @@ import iuh.fit.se.services.event_service.dto.request.BaseEventCreateRequestDto;
 
 @lombok.Value
 public class TrainingEventListCreateRequestDto {
-
 	List<BaseEventCreateRequestDto> events;	
 	
 }

@@ -15,9 +15,10 @@ import iuh.fit.se.services.event_service.dto.request.ContestExamResultUpdateRequ
 import iuh.fit.se.services.event_service.dto.request.EventOrganizerSingleRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventSearchRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.SingleEventCreateRequestDto;
 
 public interface EventService {
-	EventDetailResponseDto createEvent(BaseEventCreateRequestDto dto);
+	EventDetailResponseDto createEvent(SingleEventCreateRequestDto dto);
 
 	void deleteEvent(String eventId);
 
@@ -64,9 +65,12 @@ public interface EventService {
 
 	Attendee checkInEventWithoutSaving(Event event, String userId);
 
-	Event updateEventOrganizers(String eventId,
+	Event patchEventOrganizers(String eventId,
 		List<EventOrganizerSingleRequestDto> organizerRequests);
 
+	Event updateEventOrganizers(String eventId,
+		List<EventOrganizerSingleRequestDto> organizerRequests);
+	
 	List<EventOrganizer> getEventOrganizers(String eventId);
 	List<String> getReviewsForSeminarEvent(String eventId, String getterId);
 

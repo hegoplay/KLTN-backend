@@ -1,5 +1,6 @@
 package iuh.fit.se.services.event_service.patterns.factoryPattern;
 
+
 import java.util.HashSet;
 
 import iuh.fit.se.entity.Contest;
@@ -16,9 +17,11 @@ import iuh.fit.se.services.event_service.dto.request.SingleEventCreateRequestDto
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class ClosedContestFactory extends EventFactory {
 
 	EventMapper eventMapper;
@@ -70,6 +73,12 @@ public class ClosedContestFactory extends EventFactory {
 			.roleContent(req.roleContent())
 			.build();
 		event.addOrganizer(organizer);
+	}
+
+	@Override
+	public void checkType() {
+		// TODO Auto-generated method stub
+		log.info("This is Closed Contest Factory");
 	}
 
 }

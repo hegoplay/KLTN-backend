@@ -149,11 +149,12 @@ public class PostServiceImpl implements PostService {
 	@PostPermission(action = ActionType.UPDATE)
 	// hàm này giúp người dùng có thể cập nhật bài viết của mình
 	public Post updatePost(String postId, PostRequestDto post) {
-		if (FunctionStatus.ableToUpdate(post.status())) {
+		log.info("Post status: {}", post.status());
+		if (!FunctionStatus.ableToUpdate(post.status())) {
 			throw new RuntimeException(
 				"Post status cannot be REJECTED or ACCEPTED when updating a post");
 		}
-		if (postRepository.existsById(postId)) {
+		if (!postRepository.existsById(postId)) {
 			throw new NotFoundErrorHandler("Post not found");
 		}
 		Post existingPost = getPostById(postId);

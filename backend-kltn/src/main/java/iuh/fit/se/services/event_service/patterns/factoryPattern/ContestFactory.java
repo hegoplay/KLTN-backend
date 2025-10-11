@@ -16,9 +16,11 @@ import iuh.fit.se.services.event_service.dto.request.SingleEventCreateRequestDto
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class ContestFactory extends EventFactory {
 
 	EventMapper eventMapper;
@@ -87,6 +89,12 @@ public class ContestFactory extends EventFactory {
 			.roleContent(req.roleContent())
 			.build();
 		event.addOrganizer(organizer);
+	}
+
+	@Override
+	public void checkType() {
+		// TODO Auto-generated method stub
+		log.info("This is Contest Factory");		
 	}
 
 }

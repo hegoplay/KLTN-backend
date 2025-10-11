@@ -170,8 +170,9 @@ public class EventController {
 			eventType, isDone, startTime, endTime, page, size, sort,
 			PageableUtil.parseSort(sort));
 		String tokenFromRequest = jwtT.getTokenFromRequest(httpServletRequest);
+		String userId = jwtT.getUserIdFromToken(tokenFromRequest);
 		Page<Event> searchUserEvents = eventService
-			.searchMyEvents(request, status, tokenFromRequest);
+			.searchMyEvents(request, status, userId);
 
 		return ResponseEntity
 			.ok(pagedResourcesAssembler
@@ -309,7 +310,26 @@ public class EventController {
 			Trường hợp danh sách organizer rỗng, hệ thống sẽ giữ nguyên danh sách organizer hiện tại.
 			Từng thông tin organizer giống như 1 request thêm mới organizer.
 			""")
-	@PutMapping("/{eventId}/modify-organizers")
+	@PatchMapping(EventAPI.EVENT_ID_MODIFY_ORGANIZERS)
+	public ResponseEntity<EventDetailResponseDto> patchEventOrganizers(
+		@PathVariable String eventId,
+		@RequestBody @Valid ListEventOrganizerRequestDto organizerRequests) {
+		Event updateEventOrganizers = eventService
+			.patchEventOrganizers(eventId, organizerRequests.organizers());
+		return ResponseEntity
+			.ok()
+			.body(eventMapper.toEventDetailResponseDto(updateEventOrganizers));
+	}
+	
+	@Operation(
+		summary = "Cập nhật toàn bộ danh sách organizer của một sự kiện",
+		description = """
+			API này cho phép cập nhật danh sách organizer của một sự kiện dựa trên eventId.
+			Người dùng phải là host sự kiện, admin có quyền của sự kiện để sử dụng API này.
+			Mọi thông tin organizer hiện tại sẽ bị thay thế bởi thông tin mới. (nếu danh sách organizer rỗng, hệ thống sẽ xóa hết organizer hiện tại)
+			Tham số removed trong DTO sẽ bị bỏ qua.
+			""")
+	@PutMapping(EventAPI.EVENT_ID_MODIFY_ORGANIZERS)
 	public ResponseEntity<EventDetailResponseDto> updateEventOrganizers(
 		@PathVariable String eventId,
 		@RequestBody @Valid ListEventOrganizerRequestDto organizerRequests) {

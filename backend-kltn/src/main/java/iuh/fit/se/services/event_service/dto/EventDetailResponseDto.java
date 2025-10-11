@@ -36,6 +36,7 @@ public class EventDetailResponseDto extends EventWrapperDto {
 		requiredMode = Schema.RequiredMode.NOT_REQUIRED
 	)
 	List<ExamResultDto> examResults;
+	
 	Boolean ableToRegister;
 
 	// training event serving fields

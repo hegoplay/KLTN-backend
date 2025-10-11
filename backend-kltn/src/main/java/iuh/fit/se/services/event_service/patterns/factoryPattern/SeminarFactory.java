@@ -78,4 +78,10 @@ public class SeminarFactory extends EventFactory {
 		event.addOrganizer(organizer);
 	}
 
+	@Override
+	public void checkType() {
+		// TODO Auto-generated method stub
+		log.info("This is Seminar Factory");
+	}
+	
 }

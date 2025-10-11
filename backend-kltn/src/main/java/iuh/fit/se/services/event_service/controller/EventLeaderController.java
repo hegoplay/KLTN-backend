@@ -86,7 +86,8 @@ public class EventLeaderController {
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
 		@RequestParam(defaultValue = "location.startTime,asc") String sort,
-		@RequestParam FunctionStatus status
+	
+		@RequestParam(required = false) FunctionStatus status
 	) {
 		EventSearchRequestDto request = new EventSearchRequestDto(keyword,
 			eventType, isDone, startTime, endTime, page, size,

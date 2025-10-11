@@ -6,11 +6,13 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import iuh.fit.se.common.dto.SearchDto;
 import iuh.fit.se.common.enumerator.RequestFunctionStatus;
 import iuh.fit.se.entity.Attendee;
 import iuh.fit.se.entity.Event;
@@ -35,9 +37,12 @@ import iuh.fit.se.services.training_service.dto.TrainingSearchDto;
 import iuh.fit.se.services.training_service.dto.TrainingWrapperDto;
 import iuh.fit.se.services.training_service.mapper.TrainingMapper;
 import iuh.fit.se.services.training_service.repository.TrainingEventRepository;
+import iuh.fit.se.services.training_service.repository.TrainingParticipantsEventRepository;
 import iuh.fit.se.services.training_service.repository.TrainingRepository;
 import iuh.fit.se.services.training_service.service.TrainingService;
 import iuh.fit.se.services.training_service.specification.EntitySpecification;
+import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
+import iuh.fit.se.services.user_service.mapper.UserMapper;
 import iuh.fit.se.services.user_service.repository.UserRepository;
 import iuh.fit.se.util.TimeCheckUtil;
 import iuh.fit.se.util.TokenContextUtil;
@@ -51,11 +56,13 @@ public class TrainingServiceImpl implements TrainingService {
 
 	private final TrainingMapper trainingMapper;
 	private final EventMapper eventMapper;
+	private final UserMapper userMapper;
 
 	private final TrainingRepository trainingRepository;
 	private final UserRepository userRepository;
 	private final TrainingEventRepository trainingEventRepository;
 	private final EventRepository eventRepository;
+	private final TrainingParticipantsEventRepository trainingParticipantsEventRepository;
 
 	private final EventService eventService;
 
@@ -75,8 +82,6 @@ public class TrainingServiceImpl implements TrainingService {
 		dto.getTrainingEvents().forEach(eventDto -> {
 			EventFactory.checkEventCreation(eventDto);
 		});
-
-		log.info("Creating training: {}", dto);
 
 		Training training = trainingMapper.toTraining(dto);
 
@@ -108,6 +113,7 @@ public class TrainingServiceImpl implements TrainingService {
 						.getReferenceById(tokenContextUtil.getUserId()),
 					userRepository);
 			if (event instanceof TrainingEvent trainingEvent) {
+				trainingEvent.setLimitRegister(dto.getLimitRegister());
 				training.addTrainingEvent(trainingEvent);
 			} else {
 				throw new IllegalArgumentException(
@@ -130,12 +136,21 @@ public class TrainingServiceImpl implements TrainingService {
 				// TODO: sửa lại hàm hasMentorId
 				.or(EntitySpecification
 					.hasMentorId(tokenContextUtil.getUserId())));
-		
+
 		if (status != null)
 			spec = spec.and(EntitySpecification.hasStatus(status));
 		return searchTrainings(spec, dto);
 	}
 
+	@Override
+	public Page<UserShortInfoResponseDto> getTrainingParticipants(String trainingId,
+		SearchDto dto) {
+		Pageable pageable = dto.toPageable();
+		return trainingParticipantsEventRepository
+			.findParticipantsByTrainingId(trainingId, pageable)
+			.map(userMapper::toUserShortInfoResponseDto);
+	}
+	
 	@Override
 	public Page<TrainingWrapperDto> getPublicTrainings(TrainingSearchDto dto) {
 		Specification<Training> spec = Specification.unrestricted();
@@ -193,7 +208,7 @@ public class TrainingServiceImpl implements TrainingService {
 
 		String userId = tokenContextUtil.getUserId();
 		spec = spec.and(EntitySpecification.hasParticipantId(userId));
-		
+
 		return searchTrainings(spec, dto);
 	}
 
@@ -361,12 +376,18 @@ public class TrainingServiceImpl implements TrainingService {
 			.anyMatch(participant -> participant.getId().equals(userId));
 
 		List<Event> updatedEvents = new ArrayList<>();
+		training.addParticipant(userRepository.getReferenceById(userId));
+		if (training.getParticipants().size() > training.getLimitRegister()) {
+			throw new IllegalArgumentException(
+				"Số lượng người đăng ký đã vượt quá giới hạn cho phép");
+		}
 		// nếu chưa đăng ký thì đăng ký, nếu đã đăng ký thì hủy đăng ký
 		if (!isUserRegistered) {
 			events.forEach(event -> {
 				updatedEvents
 					.add(
 						eventService.registerEventWithoutSaving(event, userId));
+				
 			});
 		} else {
 			events.forEach(event -> {
@@ -376,8 +397,8 @@ public class TrainingServiceImpl implements TrainingService {
 			});
 			training.removeParticipant(userRepository.getReferenceById(userId));
 		}
+		
 		eventRepository.saveAll(events);
-		training.addParticipant(userRepository.getReferenceById(userId));
 		trainingRepository.save(training);
 	}
 
@@ -413,7 +434,18 @@ public class TrainingServiceImpl implements TrainingService {
 			.stream()
 			.filter(userId -> !registedUserIds.contains(userId))
 			.toList();
-
+		registedUserIds.forEach(userId -> {
+			training
+				.removeParticipant(userRepository.getReferenceById(userId));
+		});
+		unregistedUserIds.forEach(userId -> {
+			training
+				.addParticipant(userRepository.getReferenceById(userId));
+			});
+		if (training.getParticipants().size() > training.getLimitRegister()) {
+			throw new IllegalArgumentException(
+				"Số lượng người đăng ký đã vượt quá giới hạn cho phép");
+		}
 		// cập nhật lại danh sách người tham gia của khóa học
 		List<TrainingEvent> events = trainingEventRepository
 			.findAllByTraining(trainingRepository.getReferenceById(trainingId));
@@ -432,7 +464,7 @@ public class TrainingServiceImpl implements TrainingService {
 			updatedEvents.add(tempEvent);
 		}
 		eventRepository.saveAll(updatedEvents);
-
+		trainingRepository.save(training);
 	}
 
 	@Override
@@ -468,13 +500,6 @@ public class TrainingServiceImpl implements TrainingService {
 		});
 
 		for (var eventDto : dto.getEvents()) {
-			if (eventDto.getCategory() == null) {
-				eventDto.setCategory(EventCategory.TRAINING_EVENT);
-			}
-			if (eventDto.getCategory() != EventCategory.TRAINING_EVENT) {
-				throw new IllegalArgumentException(
-					"Sự kiện không phải là sự kiện đào tạo");
-			}
 			// kiểm tra tính hợp lệ của sự kiện
 			EventFactory.checkEventCreation(eventDto);
 			// tạo sự kiện
@@ -516,6 +541,7 @@ public class TrainingServiceImpl implements TrainingService {
 			.findAllByTraining(trainingRepository.getReferenceById(trainingId));
 
 		trainingEventsList.forEach(event -> {
+			event.setLimitRegister(dto.limitRegister());
 			event
 				.setStatus(RequestFunctionStatus
 					.convertToFunctionStatus(dto.status()));
@@ -552,17 +578,20 @@ public class TrainingServiceImpl implements TrainingService {
 
 	@Override
 	@Transactional
-	public void updateTrainingMentors(String trainingId,
+	public void patchTrainingMentors(String trainingId,
 		List<String> addingMentorIds, List<String> removingMentorIds) {
+		// TODO: nếu lặp lại nhiều lần thì làm thêm annotation để kiểm tra vai
+		// trò người request
 		Training training = trainingRepository
 			.findByIdFetchMentors(trainingId)
 			.orElseThrow(
 				() -> new NotFoundErrorHandler("Khóa học không tồn tại"));
 		if (!tokenContextUtil.getRole().isLeaderOrHigher()
-			&& tokenContextUtil.getUserId() != training.getCreator().getId()) {
+			&& !tokenContextUtil.getUserId().equals(training.getCreator().getId())) {
 			throw new SecurityException(
 				"Chỉ có người tạo khóa học hoặc leader mới được phép thêm hoặc xóa mentor");
 		}
+
 		if (!Objects.isNull(removingMentorIds))
 			removingMentorIds.forEach(id -> {
 				training.removeMentor(userRepository.getReferenceById(id));
@@ -573,6 +602,28 @@ public class TrainingServiceImpl implements TrainingService {
 			});
 
 		trainingRepository.save(training);
+	}
+
+	@Override
+	public void updateTrainingMentors(String trainingId,
+		List<String> mentorIds) {
+		Training training = trainingRepository
+			.findByIdFetchMentors(trainingId)
+			.orElseThrow(
+				() -> new NotFoundErrorHandler("Khóa học không tồn tại"));
+		if (!tokenContextUtil.getRole().isLeaderOrHigher()
+			&& !tokenContextUtil.getUserId().equals(training.getCreator().getId())) {
+			log.info("creator id: {}", training.getCreator().getId());
+			throw new SecurityException(
+				"Chỉ có người tạo khóa học hoặc leader mới được phép thêm hoặc xóa mentor");
+		}
+		training.clearMentors();
+		if (!Objects.isNull(mentorIds))
+			mentorIds.forEach(id -> {
+				training.addMentor(userRepository.getReferenceById(id));
+			});
+		trainingRepository.save(training);
+
 	}
 
 	private boolean allowToModify(Training training) {

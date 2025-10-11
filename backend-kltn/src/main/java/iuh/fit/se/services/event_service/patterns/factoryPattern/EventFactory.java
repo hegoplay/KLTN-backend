@@ -163,11 +163,7 @@ public abstract class EventFactory {
 	}
 
 	// public
-	public void checkType(Event e) {
-		if (e instanceof Contest) {
-			log.info("Event is a Contest");
-		}
-	}
+	public abstract void checkType();
 
 	public static EventFactory getFactory(Event event, EventMapper eventMapper,
 		TrainingRepository trainingRepository) {

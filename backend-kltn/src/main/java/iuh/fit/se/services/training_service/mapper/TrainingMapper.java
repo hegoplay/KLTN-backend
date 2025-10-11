@@ -28,21 +28,29 @@ public abstract class TrainingMapper {
 	public abstract TrainingDetailDto toTrainingDetailDto(Training training);
 
 	@AfterMapping
-	public void afterMappingToTraining(
-		TrainingCreateRequestDto dto,
-		@MappingTarget Training.TrainingBuilder training
-	) {
+	public void afterMappingToTraining(TrainingCreateRequestDto dto,
+		@MappingTarget Training.TrainingBuilder training) {
 		if (dto.getMentorIds() == null) {
 			training.mentors(new HashSet<>());
 		}
 		training.trainingEvents(new java.util.ArrayList<>());
+		if (dto.getLimitRegister() == null) {
+			training.limitRegister(0);
+		}
 
+	}
+
+	@AfterMapping
+	public void afterMappingToTrainingDetailDto(Training training,
+		@MappingTarget TrainingDetailDto.TrainingDetailDtoBuilder<?, ?> dtoBuilder) {
+		dtoBuilder
+			.currentRegistered(null != training.getParticipants()
+				? training.getParticipants().size()
+				: 0);
 	}
 
 	@BeanMapping(
 		nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 	public abstract void updateTrainingFromDtoNullIgnore(
-		TrainingPatchRequestDto dto,
-		@MappingTarget Training training
-	);
+		TrainingPatchRequestDto dto, @MappingTarget Training training);
 }

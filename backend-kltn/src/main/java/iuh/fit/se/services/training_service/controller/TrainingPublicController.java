@@ -10,6 +10,7 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,10 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import iuh.fit.se.common.dto.SearchDto;
 import iuh.fit.se.services.training_service.dto.TrainingDetailDto;
 import iuh.fit.se.services.training_service.dto.TrainingSearchDto;
 import iuh.fit.se.services.training_service.dto.TrainingWrapperDto;
 import iuh.fit.se.services.training_service.service.TrainingService;
+import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
 import iuh.fit.se.util.PageableUtil;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +47,7 @@ public class TrainingPublicController {
 
 	TrainingService trainingService;
 	PagedResourcesAssembler<TrainingWrapperDto> trainingPagedResourcesAssembler;
+	PagedResourcesAssembler<UserShortInfoResponseDto> userPagedResourcesAssembler;
 
 	@Operation(
 		summary = "Tìm kiếm các khóa học công khai",
@@ -101,4 +105,19 @@ public class TrainingPublicController {
 			.ok(trainingService.getPublicTrainingById(trainingId));
 	}
 
+	@Operation(summary = "Lấy danh sách những người tham gia khóa học", description = """
+		API này cho phép người dùng lấy danh sách những người tham gia
+		một khóa học dựa trên ID của khóa học.
+		""")
+	@GetMapping("/{trainingId}/participants")
+	public ResponseEntity<PagedModel<EntityModel<UserShortInfoResponseDto>>> getTrainingParticipants(
+		@PathVariable String trainingId,
+		@ModelAttribute SearchDto searchDto
+		) {
+//		TODO: lấy danh sach người tham gia khóa học
+		return ResponseEntity.ok(userPagedResourcesAssembler.toModel(
+			trainingService.getTrainingParticipants(trainingId,searchDto)
+		));
+	}
+	
 }

@@ -30,32 +30,29 @@ import iuh.fit.se.services.user_service.mapper.UserMapper;
 public abstract class EventMapper {
 
 	@Mapping(target = "organizers", ignore = true)
-	public abstract Seminar toSeminarIgnoreOrganizer(SingleEventCreateRequestDto dto);
+	public abstract Seminar toSeminarIgnoreOrganizer(
+		SingleEventCreateRequestDto dto);
 
 	@Mapping(target = "organizers", ignore = true)
-	public abstract Contest toContestIgnoreOrganizer(SingleEventCreateRequestDto dto);
-	
+	public abstract Contest toContestIgnoreOrganizer(
+		SingleEventCreateRequestDto dto);
+
 	// bổ sung phần after mapping để set training sau
 	@Mapping(target = "organizers", ignore = true)
 	public abstract TrainingEvent toTrainingEventIgnoreOrganizer(
-		TrainingEventCreateRequestDto dto
-	);
-	
+		TrainingEventCreateRequestDto dto);
+
 	public void afterEventMapping(
 		@MappingTarget Event.EventBuilder<?, ?> trainingEvent,
-		TrainingEventCreateRequestDto dto
-	) {
+		TrainingEventCreateRequestDto dto) {
 	}
 
 	public abstract EventDetailResponseDto toEventDetailResponseDto(
-		Seminar event
-	);
+		Seminar event);
 	public abstract EventDetailResponseDto toEventDetailResponseDto(
-		Contest event
-	);
+		Contest event);
 	public abstract EventDetailResponseDto toEventDetailResponseDto(
-		TrainingEvent event
-	);
+		TrainingEvent event);
 	public EventDetailResponseDto toEventDetailResponseDto(Event event) {
 
 		EventDetailResponseDto dto;
@@ -80,8 +77,7 @@ public abstract class EventMapper {
 	@AfterMapping
 	public void afterEventWrapperDto(
 		@MappingTarget EventWrapperDto.EventWrapperDtoBuilder<?, ?> builder,
-		Event event
-	) {
+		Event event) {
 		builder.done(Boolean.valueOf(event.isDone()));
 		if (event.isDone()) {
 			builder.timeStatus(EventTimeStatus.LOCKED);
@@ -113,35 +109,31 @@ public abstract class EventMapper {
 			throw new IllegalArgumentException(
 				"Unknown event type: " + event.getClass());
 		}
+
+		builder
+			.currentRegistered(event.getAttendeesMap() == null
+				? 0
+				: event.getAttendeesMap().size());
 	}
 
 	@BeanMapping(
 		nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-	public abstract void updateEventFromDto(
-		EventUpdateRequestDto dto,
-		@MappingTarget Contest event
-	);
+	public abstract void updateEventFromDto(EventUpdateRequestDto dto,
+		@MappingTarget Contest event);
 
 	@BeanMapping(
 		nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-	public abstract void updateEventFromDto(
-		EventUpdateRequestDto dto,
-		@MappingTarget TrainingEvent event
-	);
+	public abstract void updateEventFromDto(EventUpdateRequestDto dto,
+		@MappingTarget TrainingEvent event);
 
 	@BeanMapping(
 		nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-	public abstract void updateEventFromDto(
-		EventUpdateRequestDto dto,
-		@MappingTarget Event event
-	);
+	public abstract void updateEventFromDto(EventUpdateRequestDto dto,
+		@MappingTarget Event event);
 
 	@BeanMapping(
 		nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-	public abstract void updateEventFromDto(
-		EventUpdateRequestDto dto,
-		@MappingTarget Seminar event
-	);
-	
-	
+	public abstract void updateEventFromDto(EventUpdateRequestDto dto,
+		@MappingTarget Seminar event);
+
 }

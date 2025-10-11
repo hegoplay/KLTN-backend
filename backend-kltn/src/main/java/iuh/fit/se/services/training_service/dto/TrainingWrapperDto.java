@@ -1,5 +1,6 @@
 package iuh.fit.se.services.training_service.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import iuh.fit.se.common.dto.LocationDto;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.user_service.dto.UserShortInfoResponseDto;
@@ -21,4 +22,7 @@ public class TrainingWrapperDto {
 	LocationDto location;
 	FunctionStatus status;
 	UserShortInfoResponseDto creator;
+	Integer limitRegister;
+	@Schema(description = "Số lượng người dùng đã đăng ký tham gia training")
+	Integer currentRegistered;
 }

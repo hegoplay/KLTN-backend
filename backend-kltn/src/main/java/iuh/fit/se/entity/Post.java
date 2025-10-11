@@ -46,6 +46,7 @@ public class Post {
 	@ManyToOne
 	@JoinColumn(name = "user_id")
 	User writer;
+	@Column(columnDefinition = "TEXT")
 	String content;
 
 	@CreatedDate

@@ -9,9 +9,11 @@ import org.hibernate.validator.constraints.UniqueElements;
 import com.esotericsoftware.kryo.serializers.FieldSerializer.NotNull;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import iuh.fit.se.common.dto.LocationDto;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
 import iuh.fit.se.services.event_service.dto.request.BaseEventCreateRequestDto;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.experimental.FieldDefaults;
 
@@ -45,6 +47,14 @@ public class TrainingCreateRequestDto {
 	@UniqueElements(
 		message = "Danh sách mentorIds không được chứa phần tử trùng lặp")
 	Set<String> mentorIds;
+	
+	@Schema(
+		description = "Giới hạn số lượng người đăng ký tham gia khóa học",
+		example = "100",
+		requiredMode = RequiredMode.NOT_REQUIRED)
+	@Min(value = 0, message = "Giới hạn đăng ký phải lớn hơn = 0")
+	Integer limitRegister;
+	
 	@Schema(
 		description = "Trạng thái của khóa học (có thể là ACCEPTED hoặc REJECTED)",
 		example = "ACCEPTED")

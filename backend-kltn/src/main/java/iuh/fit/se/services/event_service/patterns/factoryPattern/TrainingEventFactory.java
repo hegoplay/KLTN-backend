@@ -10,15 +10,17 @@ import iuh.fit.se.entity.User;
 import iuh.fit.se.services.event_service.dto.EventDetailResponseDto;
 import iuh.fit.se.services.event_service.dto.request.BaseEventCreateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventOrganizerSingleRequestDto;
-import iuh.fit.se.services.event_service.dto.request.TrainingEventCreateRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.TrainingEventCreateRequestDto;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import iuh.fit.se.services.training_service.repository.TrainingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class TrainingEventFactory extends EventFactory {
 
 	EventMapper eventMapper;
@@ -34,7 +36,6 @@ public class TrainingEventFactory extends EventFactory {
 				.setTraining(
 					trainingRepository.getReferenceById(etDto.getTrainingId()));
 		}
-
 		return seminar;
 	}
 
@@ -79,5 +80,11 @@ public class TrainingEventFactory extends EventFactory {
 			.build();
 		event.addOrganizer(organizer);
 	}
-
+	
+	@Override
+	public void checkType() {
+		// TODO Auto-generated method stub
+		log.info("This is Training Event Factory");
+	}
+	
 }

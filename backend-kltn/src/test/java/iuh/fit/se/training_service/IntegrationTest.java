@@ -135,7 +135,6 @@ public class IntegrationTest {
 						.endTime(LocalDateTime.now().plusDays(3))
 						.build())
 					.organizers(new ArrayList<>())
-					.category(EventCategory.TRAINING_EVENT)
 					.build()))
 			.build();
 
@@ -178,7 +177,6 @@ public class IntegrationTest {
 				.endTime(LocalDateTime.now().plusDays(2))
 				.build())
 			.organizers(new ArrayList<>())
-			.category(EventCategory.TRAINING_EVENT)
 			.build();
 		BaseEventCreateRequestDto dto2 = BaseEventCreateRequestDto
 			.builder()
@@ -192,7 +190,6 @@ public class IntegrationTest {
 				.build())
 			.multiple(1)
 			.organizers(new ArrayList<>())
-			.category(EventCategory.TRAINING_EVENT)
 			.build();
 		trainingResponseDto = restClient
 			.post()
@@ -287,7 +284,6 @@ public class IntegrationTest {
 				.endTime(LocalDateTime.now().plusDays(5))
 				.build())
 			.organizers(new ArrayList<>())
-			.category(EventCategory.TRAINING_EVENT)
 			.build();
 		HttpClientErrorException exception = assertThrows(
 			HttpClientErrorException.class, () -> {

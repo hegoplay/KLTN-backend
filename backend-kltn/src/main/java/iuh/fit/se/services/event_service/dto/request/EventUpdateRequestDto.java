@@ -30,6 +30,12 @@ public record EventUpdateRequestDto(
 		requiredMode = Schema.RequiredMode.NOT_REQUIRED
 	)
 	Integer multiple,
+	
+	@Schema(description = "Giới hạn số người đăng ký tham gia sự kiện, nếu không có giới hạn thì để null",
+		example = "100",
+		requiredMode = Schema.RequiredMode.NOT_REQUIRED
+	)
+	Integer limitRegister,
 	@Schema(
 		description = "Trạng thái chức năng của sự kiện sau khi cập nhật. Chỉ được phép PENDING hoặc ARCHIVED",
 		example = "PENDING",

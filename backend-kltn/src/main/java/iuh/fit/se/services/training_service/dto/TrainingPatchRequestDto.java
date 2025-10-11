@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import iuh.fit.se.common.dto.LocationDto;
 import iuh.fit.se.common.enumerator.RequestFunctionStatus;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
 @Schema(description = "DTO cho việc cập nhật thông tin cơ bản của khóa học")
@@ -23,12 +24,20 @@ public record TrainingPatchRequestDto(
 	@Length(
 		min = 20,
 		message = "Mô tả phải có ít nhất 20 ký tự") String description,
+	
+	@Schema(
+		description = "Giới hạn số lượng người đăng ký tham gia khóa học",
+		example = "100",
+		requiredMode = RequiredMode.NOT_REQUIRED)
+	@Min(value = 0, message = "Giới hạn đăng ký phải lớn hơn = 0")
+	Integer limitRegister,
+	
 	@Schema(
 		description = "Trạng thái yêu cầu cho khóa học (PENDING, ARCHIVED)",
 		example = "PENDING",
 		requiredMode = RequiredMode.REQUIRED)
 	@NotNull
-	@NotBlank RequestFunctionStatus status
+	RequestFunctionStatus status
 
 ) {
 

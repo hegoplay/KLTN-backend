@@ -31,6 +31,7 @@ import iuh.fit.se.services.training_service.dto.TrainingCreateRequestDto;
 import iuh.fit.se.services.training_service.dto.TrainingDetailDto;
 import iuh.fit.se.services.training_service.dto.TrainingEventListCreateRequestDto;
 import iuh.fit.se.services.training_service.dto.TrainingMemberRequestDto;
+import iuh.fit.se.services.training_service.dto.TrainingMentorsRequestDto;
 import iuh.fit.se.services.training_service.dto.TrainingPatchRequestDto;
 import iuh.fit.se.services.training_service.dto.TrainingSearchDto;
 import iuh.fit.se.services.training_service.dto.TrainingWrapperDto;
@@ -199,10 +200,21 @@ public class TrainingController {
 		@RequestBody @Valid TrainingMemberRequestDto dto
 	) {
 		trainingService
-			.updateTrainingMentors(trainingId, dto.getAddMentorIds(),
+			.patchTrainingMentors(trainingId, dto.getAddMentorIds(),
 				dto.getRemoveMentorIds());
 		return ResponseEntity.accepted().build();
 	}
+	
+	@PutMapping("/{trainingId}/mentors")
+	public ResponseEntity<Void> modifyMentorsToTraining(
+		@PathVariable String trainingId,
+		@RequestBody @Valid TrainingMentorsRequestDto dto
+	) {
+		trainingService
+			.updateTrainingMentors(trainingId, dto.getMentorIds());
+		return ResponseEntity.accepted().build();
+	}
+	
 	@GetMapping("/search/registered-trainings")
 	@Operation(
 		summary = "Tìm kiếm các training mà tôi đã đăng ký tham gia",

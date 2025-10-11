@@ -54,4 +54,14 @@ public class EventWrapperDto {
 	EventTimeStatus timeStatus;
 	@Schema(description = "Loại sự kiện (SEMINAR, TRAINING, CONTEST)")
 	EventCategory category;
+	
+	@Schema(
+		description = "Cho biết người dùng hiện tại có thể đăng ký tham gia sự kiện hay không (dùng cho contest)",
+		requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+		example = "true"
+	)
+	Integer limitRegister;
+	
+	@Schema(description = "Số lượng người dùng đã đăng ký tham gia sự kiện")
+	Integer currentRegistered;
 }

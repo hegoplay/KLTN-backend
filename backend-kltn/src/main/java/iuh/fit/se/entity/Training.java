@@ -67,7 +67,10 @@ public class Training {
 	@JoinColumn(name = "creator_id")
 	User creator;
 
-	@ManyToMany(fetch = FetchType.LAZY)
+	@Builder.Default
+	Integer limitRegister = 0;
+	
+	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(
 		name = "registered_training_participants",
 		joinColumns = @JoinColumn(name = "training_id"),
@@ -141,4 +144,10 @@ public class Training {
 		event.setTraining(this);
 	}
 
+	public void clearMentors() {
+		if (mentors != null) {
+			mentors.clear();
+		}
+	}
+	
 }

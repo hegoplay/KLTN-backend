@@ -37,6 +37,8 @@ import iuh.fit.se.services.event_service.dto.request.ContestExamResultUpdateRequ
 import iuh.fit.se.services.event_service.dto.request.EventOrganizerSingleRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventSearchRequestDto;
 import iuh.fit.se.services.event_service.dto.request.EventUpdateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.SingleEventCreateRequestDto;
+import iuh.fit.se.services.event_service.dto.request.TrainingEventCreateRequestDto;
 import iuh.fit.se.services.event_service.mapper.EventMapper;
 import iuh.fit.se.services.event_service.mapper.EventOrganizerMapper;
 import iuh.fit.se.services.event_service.patterns.factoryPattern.ContestFactory;
@@ -90,7 +92,7 @@ public class EventServiceImpl implements EventService {
 	@Override
 	@PreAuthorize("hasRole('ADMIN') or hasRole('MEMBER') or hasRole('LEADER')")
 	@Transactional
-	public EventDetailResponseDto createEvent(BaseEventCreateRequestDto dto) {
+	public EventDetailResponseDto createEvent(SingleEventCreateRequestDto dto) {
 		log.info("Creating event: {}", dto);
 
 		if (!tokenContextUtil.getRole().isLeaderOrHigher()
@@ -168,15 +170,13 @@ public class EventServiceImpl implements EventService {
 	@PreAuthorize("hasRole('ADMIN') or hasRole('MEMBER') or hasRole('LEADER')")
 	public Page<Event> searchMyEvents(EventSearchRequestDto request,
 		FunctionStatus status, String userId) {
-
-		String currentUsername = ContextUtil.getCurrentUsername();
-
 		Specification<Event> spec = Specification.unrestricted();
-
+		
 		spec = spec
 			.and(EventSpecification
-				.hasHostedUsername(currentUsername)
-				.or(EventSpecification.includeOrganizerId(userId)));
+				.hasHostedUserId(userId)
+				.or(EventSpecification.includeOrganizerId(tokenContextUtil.getUserId()))
+				);
 
 		if (status != null) {
 			spec = spec.and(EventSpecification.hasStatus(status));
@@ -196,7 +196,7 @@ public class EventServiceImpl implements EventService {
 	@Override
 	public EventDetailResponseDto getEventById(String eventId) {
 		Event event = eventRepository
-			.findById(eventId)
+			.findByIdAndFetchAttendees(eventId)
 			.orElseThrow(() -> new NotFoundErrorHandler(
 				"Event with ID " + eventId + " does not exist"));
 
@@ -588,6 +588,10 @@ public class EventServiceImpl implements EventService {
 		} else {
 			e = registerEventWithoutSaving(event, userId);
 		}
+		if (e.getAttendeesMap().size() > event.getLimitRegister()) {
+			throw new IllegalStateException(
+				"Event with ID " + event.getId() + " has reached its registration limit");
+		}
 		eventRepository.save(e);
 	}
 
@@ -671,7 +675,7 @@ public class EventServiceImpl implements EventService {
 	@Override
 	@Transactional
 	@PreAuthorize("hasRole('ADMIN') or hasRole('LEADER') or hasRole('MEMBER')")
-	public Event updateEventOrganizers(String eventId,
+	public Event patchEventOrganizers(String eventId,
 		List<EventOrganizerSingleRequestDto> organizerRequests) {
 		// kiểm tra trong list chỉ được có 1 id
 		Set<String> ids = new HashSet<>();
@@ -689,7 +693,7 @@ public class EventServiceImpl implements EventService {
 		EventFactory factory = EventFactory
 			.getFactory(event, eventMapper, trainingRepository);
 
-		factory.checkType(event);
+		factory.checkType();
 
 		if (!checkEventRole(event, tokenContextUtil.getUserId(), null)) {
 			throw new SecurityException(
@@ -718,6 +722,38 @@ public class EventServiceImpl implements EventService {
 					.addOrUpdateOrganizerToEvent(event, req, userRepository);
 			}
 		}
+		return eventRepository.save(event);
+	}
+	
+	@Override
+	public Event updateEventOrganizers(String eventId,
+		List<EventOrganizerSingleRequestDto> organizerRequests) {
+		
+		Set<String> ids = new HashSet<>();
+		organizerRequests.forEach(req -> {
+			if (!ids.add(req.organizerId())) {
+				throw new IllegalArgumentException(
+					"Duplicate organizer ID in request: " + req.organizerId());
+			}
+		});
+		Event event = eventRepository
+			.findByIdAndFetchOrganizers(eventId)
+			.orElseThrow(() -> new IllegalArgumentException(
+				"Event with ID " + eventId + " does not exist"));
+
+		EventFactory factory = EventFactory
+			.getFactory(event, eventMapper, trainingRepository);
+		
+		if (!checkEventRole(event, tokenContextUtil.getUserId(), null)) {
+			throw new SecurityException(
+				"Only the host, organizers, or leader can update organizers for this event");
+		}
+		event.clearOrganizers();
+		for (EventOrganizerSingleRequestDto req : organizerRequests) {
+			event = factory
+					.addOrUpdateOrganizerToEvent(event, req, userRepository);
+		}
+		
 		return eventRepository.save(event);
 	}
 
@@ -846,21 +882,31 @@ public class EventServiceImpl implements EventService {
 		EventFactory factory = EventFactory
 			.getFactory(event, eventMapper, trainingRepository);
 
+		Event updatedEvent = factory.updateEvent(event, dto);
+		eventRepository.save(updatedEvent);
+		
 		return factory
-			.toEventDetailResponseDto(factory.updateEvent(event, dto));
+			.toEventDetailResponseDto(updatedEvent);
 	}
 
 	private EventFactory getFactory(BaseEventCreateRequestDto dto) {
-		return switch (dto.getCategory()) {
-			case SEMINAR -> new SeminarFactory(eventMapper);
-			case CONTEST -> new ContestFactory(eventMapper);
-			case TRAINING_EVENT ->
-				new TrainingEventFactory(eventMapper, trainingRepository);
-			case CLOSED_CONTEST -> new ContestFactory(eventMapper);
-			// ClosedContestFactory(eventMapper);
-			default -> throw new IllegalArgumentException(
-				"Unsupported event type: " + dto.getCategory());
-		};
+		
+		if (dto instanceof TrainingEventCreateRequestDto) {
+			return new TrainingEventFactory(eventMapper, trainingRepository);
+		}
+		if (dto instanceof SingleEventCreateRequestDto singleDto) {
+			return switch (singleDto.getCategory()) {
+				case SEMINAR -> new SeminarFactory(eventMapper);
+				case CONTEST -> new ContestFactory(eventMapper);
+				case CLOSED_CONTEST -> new ContestFactory(eventMapper);
+				// ClosedContestFactory(eventMapper);
+				default -> throw new IllegalArgumentException(
+					"Unsupported event type: " + singleDto.getCategory());
+			};
+		}
+		throw new IllegalArgumentException(
+			"Unsupported event type: ");
+		
 	}
 
 	@Override
