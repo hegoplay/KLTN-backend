@@ -171,12 +171,12 @@ public class EventServiceImpl implements EventService {
 	public Page<Event> searchMyEvents(EventSearchRequestDto request,
 		FunctionStatus status, String userId) {
 		Specification<Event> spec = Specification.unrestricted();
-		
+
 		spec = spec
 			.and(EventSpecification
 				.hasHostedUserId(userId)
-				.or(EventSpecification.includeOrganizerId(tokenContextUtil.getUserId()))
-				);
+				.or(EventSpecification
+					.includeOrganizerId(tokenContextUtil.getUserId())));
 
 		if (status != null) {
 			spec = spec.and(EventSpecification.hasStatus(status));
@@ -184,12 +184,14 @@ public class EventServiceImpl implements EventService {
 
 		return searchEvents(spec, request);
 	}
-	
+
 	@Override
 	public Page<Event> searchRegisteredEvents(EventSearchRequestDto request,
 		FunctionStatus status, String userId, AttendeeStatus attendeeStatus) {
 		Specification<Event> spec = Specification.unrestricted();
-		spec = spec.and(EventSpecification.includeAttendeeIdAndAttendeeStatus(userId,attendeeStatus));
+		spec = spec
+			.and(EventSpecification
+				.includeAttendeeIdAndAttendeeStatus(userId, attendeeStatus));
 		return searchEvents(spec, request);
 	}
 
@@ -254,7 +256,8 @@ public class EventServiceImpl implements EventService {
 						.hasDescriptionContaining(request.getKeyword())));
 		}
 		// Filter by event type
-		if (request.getType() != null && request.getType() != EventSearchType.ALL) {
+		if (request.getType() != null
+			&& request.getType() != EventSearchType.ALL) {
 			Class<? extends Event> eventClass = switch (request.getType()) {
 				case SEMINAR -> Seminar.class;
 				case CONTEST -> Contest.class;
@@ -282,7 +285,7 @@ public class EventServiceImpl implements EventService {
 		// startTime
 		spec = spec
 			.and(EventSpecification
-			.hasTimeBetween(request.getStartTime(), request.getEndTime()));
+				.hasTimeBetween(request.getStartTime(), request.getEndTime()));
 
 		return eventRepository.findAll(spec, request.toPageable());
 	}
@@ -309,10 +312,10 @@ public class EventServiceImpl implements EventService {
 			throw new IllegalStateException(
 				"Cannot change status of an event that is already done");
 		}
-//		 if (event.getStatus() != FunctionStatus.PENDING) {
-//				throw new IllegalStateException(
-//					"Can only change status of events that are in PENDING state");
-//		 }
+		// if (event.getStatus() != FunctionStatus.PENDING) {
+		// throw new IllegalStateException(
+		// "Can only change status of events that are in PENDING state");
+		// }
 		// if (status != FunctionStatus.ACCEPTED || status !=
 		// FunctionStatus.REJECTED) {
 		//// TODO: chỉnh lại trạng thái được phép chuyển, hiện tại chỉ rằng buộc
@@ -526,15 +529,8 @@ public class EventServiceImpl implements EventService {
 		}
 		List<Attendee> successfulCheckIns = new ArrayList<>();
 		for (String attendeeId : attendeeIds) {
-			try {
-				successfulCheckIns
-					.add(checkInEventWithoutSaving(event, attendeeId));
-			} catch (Exception e) {
-				log
-					.error("Check-in failed for {}: {}", attendeeId,
-						e.getMessage());
-				// Continue với attendee tiếp theo
-			}
+			successfulCheckIns
+				.add(checkInEventWithoutSaving(event, attendeeId));
 		}
 		eventAttendeeRepository.saveAll(successfulCheckIns);
 		// eventRepository.save(event);
@@ -589,8 +585,8 @@ public class EventServiceImpl implements EventService {
 			e = registerEventWithoutSaving(event, userId);
 		}
 		if (e.getAttendeesMap().size() > event.getLimitRegister()) {
-			throw new IllegalStateException(
-				"Event with ID " + event.getId() + " has reached its registration limit");
+			throw new IllegalStateException("Event with ID " + event.getId()
+				+ " has reached its registration limit");
 		}
 		eventRepository.save(e);
 	}
@@ -724,11 +720,11 @@ public class EventServiceImpl implements EventService {
 		}
 		return eventRepository.save(event);
 	}
-	
+
 	@Override
 	public Event updateEventOrganizers(String eventId,
 		List<EventOrganizerSingleRequestDto> organizerRequests) {
-		
+
 		Set<String> ids = new HashSet<>();
 		organizerRequests.forEach(req -> {
 			if (!ids.add(req.organizerId())) {
@@ -743,7 +739,7 @@ public class EventServiceImpl implements EventService {
 
 		EventFactory factory = EventFactory
 			.getFactory(event, eventMapper, trainingRepository);
-		
+
 		if (!checkEventRole(event, tokenContextUtil.getUserId(), null)) {
 			throw new SecurityException(
 				"Only the host, organizers, or leader can update organizers for this event");
@@ -751,9 +747,9 @@ public class EventServiceImpl implements EventService {
 		event.clearOrganizers();
 		for (EventOrganizerSingleRequestDto req : organizerRequests) {
 			event = factory
-					.addOrUpdateOrganizerToEvent(event, req, userRepository);
+				.addOrUpdateOrganizerToEvent(event, req, userRepository);
 		}
-		
+
 		return eventRepository.save(event);
 	}
 
@@ -884,13 +880,12 @@ public class EventServiceImpl implements EventService {
 
 		Event updatedEvent = factory.updateEvent(event, dto);
 		eventRepository.save(updatedEvent);
-		
-		return factory
-			.toEventDetailResponseDto(updatedEvent);
+
+		return factory.toEventDetailResponseDto(updatedEvent);
 	}
 
 	private EventFactory getFactory(BaseEventCreateRequestDto dto) {
-		
+
 		if (dto instanceof TrainingEventCreateRequestDto) {
 			return new TrainingEventFactory(eventMapper, trainingRepository);
 		}
@@ -904,9 +899,8 @@ public class EventServiceImpl implements EventService {
 					"Unsupported event type: " + singleDto.getCategory());
 			};
 		}
-		throw new IllegalArgumentException(
-			"Unsupported event type: ");
-		
+		throw new IllegalArgumentException("Unsupported event type: ");
+
 	}
 
 	@Override

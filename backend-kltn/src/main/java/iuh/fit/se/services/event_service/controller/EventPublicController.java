@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.se.entity.Event;
 import iuh.fit.se.entity.enumerator.FunctionStatus;
@@ -115,6 +116,7 @@ public class EventPublicController {
 			Lưu ý: Chỉ các sự kiện ở trạng thái ACCEPTED mới được xem là công khai và có thể truy cập qua API này.
 			Nếu sự kiện không ở trạng thái này, API sẽ trả về lỗi.
 			""")
+	@SecurityRequirement(name = "bearerAuth")
 	@GetMapping("/{eventId}")
 	public ResponseEntity<EventDetailResponseDto> getEventById(
 		@PathVariable String eventId,
