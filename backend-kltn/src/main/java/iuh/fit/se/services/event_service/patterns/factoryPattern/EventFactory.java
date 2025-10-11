@@ -112,6 +112,7 @@ public abstract class EventFactory {
 
 	public Event addOrUpdateOrganizerToEvent(Event event,
 		EventOrganizerSingleRequestDto req, UserRepository userRepository) {
+		log.info("Adding or updating organizer: {}", req);
 		User organizerUser = userRepository
 			.findById(req.organizerId())
 			.orElseThrow(() -> new IllegalArgumentException(
@@ -121,6 +122,7 @@ public abstract class EventFactory {
 				"User with ID " + req.organizerId()
 					+ " is not a member and cannot be an organizer");
 		}
+		
 		EventOrganizer organizer = event
 			.getOrganizerByUserId(req.organizerId());
 		if (organizer == null) {
