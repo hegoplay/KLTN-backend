@@ -58,7 +58,7 @@ public class EventWrapperDto {
 	@Schema(
 		description = "Cho biết người dùng hiện tại có thể đăng ký tham gia sự kiện hay không (dùng cho contest)",
 		requiredMode = Schema.RequiredMode.NOT_REQUIRED,
-		example = "true"
+		example = "1"
 	)
 	Integer limitRegister;
 	
